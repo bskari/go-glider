@@ -264,12 +264,18 @@ loop:
 
 			xHorizontal := float64(xRawM)*math.Cos(pitch_r) + float64(yRawM)*math.Sin(roll_r)*math.Sin(pitch_r) - float64(zRawM)*math.Cos(roll_r)*math.Sin(pitch_r)
 			yHorizontal := float64(yRawM)*math.Cos(roll_r) + float64(zRawM)*math.Sin(roll_r)
+			heading := glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))
+			// The magnetometer is mounted rotated 180 degrees, so rotate it
+			heading = heading + 180
+			if heading > 360 {
+				heading -= 360
+			}
 
 			writer.WriteLine("=== Magnetometer ===")
 			writer.IndentLine(fmt.Sprintf("x: %v, min: %v, max: %v", xRawM, xMinFlux, xMaxFlux))
 			writer.IndentLine(fmt.Sprintf("y: %v, min: %v, max: %v", yRawM, yMinFlux, yMaxFlux))
 			writer.IndentLine(fmt.Sprintf("z: %v, min: %v, max: %v", zRawM, zMinFlux, zMaxFlux))
-			writer.IndentLine(fmt.Sprintf("heading: %v", glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))))
+			writer.IndentLine(fmt.Sprintf("heading: %v", heading))
 
 			// Output button state
 			var buttonState rpio.State
@@ -290,7 +296,7 @@ loop:
 			// Output temperature
 			var value_c float32
 			if magnetometer != nil {
-				temperature, err := magnetometer.GetTemperature()
+				temperature, err := magnetometer.SenseRelativeTemperature()
 				if err != nil {
 					panic(err)
 				}
