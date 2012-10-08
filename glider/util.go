@@ -181,6 +181,8 @@ type configuration_t struct {
 	TargetPitch                 Degrees
 	MaxServoPitchAdjustment     Degrees
 	MaxServoAngleOffset         Degrees
+	LeftServoCenter_us          uint16
+	RightServoCenter_us         uint16
 	ButtonPin                   uint8
 	LeftServoPin                uint8
 	RightServoPin               uint8
@@ -216,6 +218,8 @@ type tomlConfiguration_t struct {
 	TargetPitch_d                float64
 	MaxServoPitchAdjustment_d    float64
 	MaxServoAngleOffset_d        float64
+	LeftServoCenter_us           int64
+	RightServoCenter_us          int64
 	ButtonPin                    int64
 	LeftServoPin                 int64
 	RightServoPin                int64
@@ -262,14 +266,14 @@ func LoadConfiguration(configurationReader io.Reader) error {
 	configuration.MagnetometerYOffset_t = float32(tomlConfiguration.MagnetometerYMax_t + tomlConfiguration.MagnetometerYMin_t*0.5)
 	configuration.Declination = float32(tomlConfiguration.Declination_d)
 
-	configuration.IterationSleepTime = time.Duration(tomlConfiguration.IterationSleepTime_s) * time.Second
+	configuration.IterationSleepTime = time.Duration(tomlConfiguration.IterationSleepTime_s * float64(time.Second))
 
 	configuration.ButtonPin = uint8(tomlConfiguration.ButtonPin)
 	configuration.LeftServoPin = uint8(tomlConfiguration.LeftServoPin)
 	configuration.RightServoPin = uint8(tomlConfiguration.RightServoPin)
 
-	configuration.LandNoMoveDuration = time.Duration(tomlConfiguration.LandNoMoveDuration_s) * time.Second
-	configuration.LaunchGlideDuration = time.Duration(tomlConfiguration.LaunchGlideDuration_s) * time.Second
+	configuration.LandNoMoveDuration = time.Duration(tomlConfiguration.LandNoMoveDuration_s * float64(time.Second))
+	configuration.LaunchGlideDuration = time.Duration(tomlConfiguration.LaunchGlideDuration_s * float64(time.Second))
 	configuration.ProportionalRollMultiplier = float32(tomlConfiguration.ProportionalRollMultiplier)
 	configuration.ProportionalPitchMultiplier = float32(tomlConfiguration.ProportionalPitchMultiplier)
 	configuration.LandingPointAltitude = Meters(tomlConfiguration.LandingPointAltitude_m)
@@ -277,8 +281,10 @@ func LoadConfiguration(configurationReader io.Reader) error {
 	configuration.TargetPitch = Degrees(tomlConfiguration.TargetPitch_d)
 	configuration.MaxServoPitchAdjustment = Degrees(tomlConfiguration.MaxServoPitchAdjustment_d)
 	configuration.MaxServoAngleOffset = Degrees(tomlConfiguration.MaxServoAngleOffset_d)
+	configuration.LeftServoCenter_us = uint16(tomlConfiguration.LeftServoCenter_us)
+	configuration.RightServoCenter_us = uint16(tomlConfiguration.RightServoCenter_us)
 
-	configuration.ErrorSleepDuration = time.Duration(tomlConfiguration.ErrorSleepDuration_s) * time.Second
+	configuration.ErrorSleepDuration = time.Duration(tomlConfiguration.ErrorSleepDuration_s * float64(time.Second))
 
 	return nil
 }

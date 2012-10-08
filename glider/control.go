@@ -14,11 +14,12 @@ const HERTZ = 50
 const MULTIPLIER = 20000
 const US_PER_CYCLE = (1000 * 1000) / HERTZ
 const US_PER_DEGREE = 800 / 90
-const ZERO_US = 1430 - US_PER_DEGREE*90
 
 type Control struct {
-	left  *rpio.Pin
-	right *rpio.Pin
+	left         *rpio.Pin
+	right        *rpio.Pin
+	leftZero_us  float32
+	rightZero_us float32
 }
 
 func NewControl() *Control {
@@ -30,8 +31,10 @@ func NewControl() *Control {
 	tempRight.Freq(HERTZ * MULTIPLIER)
 	tempLeft.DutyCycle(1000, MULTIPLIER)
 	control := Control{
-		left:  &tempLeft,
-		right: &tempRight,
+		left:         &tempLeft,
+		right:        &tempRight,
+		leftZero_us:  float32(configuration.LeftServoCenter_us - US_PER_DEGREE*90),
+		rightZero_us: float32(configuration.RightServoCenter_us - US_PER_DEGREE*90),
 	}
 	// Param freq should be in range 4688Hz - 19.2MHz to prevent
 	// unexpected behavior
@@ -39,14 +42,14 @@ func NewControl() *Control {
 }
 
 func (control *Control) SetLeft(angle Degrees) error {
-	return control.set(control.left, angle)
+	return control.set(control.left, angle, control.leftZero_us)
 }
 
 func (control *Control) SetRight(angle Degrees) error {
-	return control.set(control.right, angle)
+	return control.set(control.right, angle, control.rightZero_us)
 }
 
-func (control *Control) set(pin *rpio.Pin, angle Degrees) error {
+func (control *Control) set(pin *rpio.Pin, angle Degrees, offset float32) error {
 	// Output frequency is computed as pwm clock frequency divided by cycle length.
 	// So, to set Pwm pin to freqency 38kHz with duty cycle 1/4, use this combination:
 	//  pin.DutyCycle(1, 4)
@@ -54,12 +57,12 @@ func (control *Control) set(pin *rpio.Pin, angle Degrees) error {
 	if angle < 45 || angle > 135 {
 		return errors.New("Bad angle")
 	}
-	targetUs := uint32(angle*US_PER_DEGREE + ZERO_US)
-	a := getDutyCycleForUs(targetUs)
+	target_us := uint32(angle*US_PER_DEGREE + offset)
+	a := getDutyCycleForUs(target_us)
 	pin.DutyCycle(a, MULTIPLIER)
 	return nil
 }
 
-func getDutyCycleForUs(targetUs uint32) uint32 {
-	return targetUs * MULTIPLIER / US_PER_CYCLE
+func getDutyCycleForUs(target_us uint32) uint32 {
+	return target_us * MULTIPLIER / US_PER_CYCLE
 }

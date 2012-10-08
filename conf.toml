@@ -40,6 +40,9 @@ TargetPitch_d = -10.0  # TODO: Tune this
 # The max we're allowed to adjust the servos to adjust the pitch
 MaxServoPitchAdjustment_d = 25.0  # TODO: Tune this
 MaxServoAngleOffset_d = 45.0
+# Microseconds settings for center servos
+LeftServoCenter_us = 1430
+RightServoCenter_us = 1570
 
  # **** Pins ****
 ButtonPin = 24
