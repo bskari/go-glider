@@ -210,14 +210,19 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 	// The roll calculation assumes that -x is forward, +y is right, and
 	// +z is down
 
-	// TODO: I think these roll and pitch calculations are wrong. We
-	// need to figoure out the x, y, and z components that are off and
-	// then add those.
-	pitch := ToDegrees(float32(pitch_r)) - configuration.PitchOffset
-	for pitch < 0.0 {
+	// TODO: I think these roll and pitch offset calculations are wrong.
+	// We need to figoure out the x, y, and z components that are off
+	// and then add those above to the raw values.
+
+	pitch := ToDegrees(float32(pitch_r)) + configuration.PitchOffset
+	for pitch < -180.0 {
 		pitch += 360.0
 	}
-	roll := -ToDegrees(float32(roll_r)) + configuration.RollOffset + 360.0
+	for pitch > 180.0 {
+		pitch -= 360.0
+	}
+
+	roll := -ToDegrees(float32(roll_r)) + configuration.RollOffset
 	for roll < -180.0 {
 		roll += 360.0
 	}
