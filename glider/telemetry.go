@@ -217,9 +217,12 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 	for pitch < 0.0 {
 		pitch += 360.0
 	}
-	roll := ToDegrees(float32(roll_r)) - configuration.RollOffset
-	for roll < 0.0 {
+	roll := -ToDegrees(float32(roll_r)) + configuration.RollOffset + 360.0
+	for roll < -180.0 {
 		roll += 360.0
+	}
+	for roll > 180.0 {
+		roll -= 360.0
 	}
 	return Axes{
 		Pitch: pitch,
