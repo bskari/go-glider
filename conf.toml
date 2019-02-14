@@ -42,7 +42,7 @@ MaxTargetRoll_d = 15.0  # TODO: Tune this
 LandingPointAltitude_m = 1556.0
 LandingPointAltitudeOffset_m = 1000.0
 # The preferred pitch for gliding
-TargetPitch_d = -3  # atan(1/20) == 2.862
+TargetPitch_d = -3.0  # atan(1/20) == 2.862
 # The max we're allowed to adjust the servos to adjust the pitch
 MaxServoPitchAdjustment_d = 25.0  # TODO: Tune this
 MaxServoAngleOffset_d = 45.0
