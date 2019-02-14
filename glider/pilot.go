@@ -157,6 +157,7 @@ func (pilot *Pilot) runLanded() {
 	buttonState := pilot.buttonPin.Read()
 	if buttonState == rpio.Low {
 		pilot.state = waitingForLaunch
+		Logger.Info("Waiting for launch")
 	}
 }
 

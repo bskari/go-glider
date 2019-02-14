@@ -142,6 +142,7 @@ func dumpSensors() {
 	statusIndicator := glider.NewLedStatusIndicator(3)
 	blinkCount := uint8(3)
 
+	writer := &StringWriter{Line: 0}
 loop:
 	for {
 		// The LED needs to update more often than the termbox
@@ -164,6 +165,7 @@ loop:
 				break loop
 			}
 		default:
+			writer.Line = 0
 
 			// Read from the GPS
 			text, err := gps.ReadString('\n')
@@ -175,28 +177,25 @@ loop:
 			}
 
 			// Output the NMEA sentences
-			line := 0
-			writeString("  GPS", line)
-			line++
+			writer.WriteLine("=== GPS ===")
 			gpsTypes := make([]string, 0, len(gpsMessageTypeToMessage))
 			for type_ := range gpsMessageTypeToMessage {
 				gpsTypes = append(gpsTypes, type_)
 			}
 			sort.Strings(gpsTypes)
 			for _, type_ := range gpsTypes {
-				writeString(gpsMessageTypeToMessage[type_], line)
-				line++
+				writer.WriteLine(gpsMessageTypeToMessage[type_])
 			}
 
 			// Output accelerometer readings
 			var x, y, z physic.Force
-			var xRaw, yRaw, zRaw int16
+			var xRawA, yRawA, zRawA int16
 			if accelerometer != nil {
 				x, y, z, err = accelerometer.Sense()
 				if err != nil {
 					panic(err)
 				}
-				xRaw, yRaw, zRaw, err = accelerometer.SenseRaw()
+				xRawA, yRawA, zRawA, err = accelerometer.SenseRaw()
 				if err != nil {
 					panic(err)
 				}
@@ -206,10 +205,17 @@ loop:
 				x = physic.Force(offset + rand.Int63n(randRange))
 				y = physic.Force(offset + rand.Int63n(randRange))
 				z = physic.Force(offset+rand.Int63n(randRange)) + physic.EarthGravity
-				xRaw = int16(-10 + rand.Intn(21))
-				yRaw = int16(-10 + rand.Intn(21))
-				zRaw = int16(90 + rand.Intn(21))
+				xRawA = int16(-10 + rand.Intn(21))
+				yRawA = int16(-10 + rand.Intn(21))
+				zRawA = int16(90 + rand.Intn(21))
 			}
+			x2 := int32(xRawA) * int32(xRawA)
+			z2 := int32(zRawA) * int32(zRawA)
+			pitch_r := math.Atan(-float64(xRawA) / math.Sqrt(float64(x2+z2)))
+			roll_r := math.Atan2(float64(yRawA), float64(zRawA))
+			pitch_d := glider.ToDegrees(float32(pitch_r))
+			roll_d := glider.ToDegrees(float32(roll_r))
+
 			xMps := float64(x) / float64(physic.Newton)
 			yMps := float64(y) / float64(physic.Newton)
 			zMps := float64(z) / float64(physic.Newton)
@@ -219,53 +225,51 @@ loop:
 			xMaxMps = math.Max(xMps, xMaxMps)
 			yMaxMps = math.Max(yMps, yMaxMps)
 			zMaxMps = math.Max(zMps, zMaxMps)
-			writeString("  Accelerometer", line)
-			line++
-			writeString(fmt.Sprintf("x mps: %6.3f, min: %6.3f, max: %6.3f", xMps, xMinMps, xMaxMps), line)
-			line++
-			writeString(fmt.Sprintf("y mps: %6.3f, min: %6.3f, max: %6.3f", yMps, yMinMps, yMaxMps), line)
-			line++
-			writeString(fmt.Sprintf("z mps: %6.3f, min: %6.3f, max: %6.3f", zMps, zMinMps, zMaxMps), line)
-			line++
 
-			xMinAccelerometerRaw = min(xRaw, xMinAccelerometerRaw)
-			yMinAccelerometerRaw = min(yRaw, yMinAccelerometerRaw)
-			zMinAccelerometerRaw = min(zRaw, zMinAccelerometerRaw)
-			xMaxAccelerometerRaw = max(xRaw, xMaxAccelerometerRaw)
-			yMaxAccelerometerRaw = max(yRaw, yMaxAccelerometerRaw)
-			zMaxAccelerometerRaw = max(zRaw, zMaxAccelerometerRaw)
-			writeString(fmt.Sprintf("x raw: %4d, min: %4d, max: %4d", xRaw, xMinAccelerometerRaw, xMaxAccelerometerRaw), line)
-			line++
-			writeString(fmt.Sprintf("y raw: %4d, min: %4d, max: %4d", yRaw, yMinAccelerometerRaw, yMaxAccelerometerRaw), line)
-			line++
-			writeString(fmt.Sprintf("z raw: %4d, min: %4d, max: %4d", zRaw, zMinAccelerometerRaw, zMaxAccelerometerRaw), line)
-			line++
+			writer.WriteLine("=== Accelerometer ===")
+			writer.WriteLine(fmt.Sprintf("x mps: %6.3f, min: %6.3f, max: %6.3f", xMps, xMinMps, xMaxMps))
+			writer.WriteLine(fmt.Sprintf("y mps: %6.3f, min: %6.3f, max: %6.3f", yMps, yMinMps, yMaxMps))
+			writer.WriteLine(fmt.Sprintf("z mps: %6.3f, min: %6.3f, max: %6.3f", zMps, zMinMps, zMaxMps))
+
+			xMinAccelerometerRaw = min(xRawA, xMinAccelerometerRaw)
+			yMinAccelerometerRaw = min(yRawA, yMinAccelerometerRaw)
+			zMinAccelerometerRaw = min(zRawA, zMinAccelerometerRaw)
+			xMaxAccelerometerRaw = max(xRawA, xMaxAccelerometerRaw)
+			yMaxAccelerometerRaw = max(yRawA, yMaxAccelerometerRaw)
+			zMaxAccelerometerRaw = max(zRawA, zMaxAccelerometerRaw)
+			writer.WriteLine(fmt.Sprintf("x raw: %4d, min: %4d, max: %4d", xRawA, xMinAccelerometerRaw, xMaxAccelerometerRaw))
+			writer.WriteLine(fmt.Sprintf("y raw: %4d, min: %4d, max: %4d", yRawA, yMinAccelerometerRaw, yMaxAccelerometerRaw))
+			writer.WriteLine(fmt.Sprintf("z raw: %4d, min: %4d, max: %4d", zRawA, zMinAccelerometerRaw, zMaxAccelerometerRaw))
+
+			writer.WriteLine(fmt.Sprintf("pitch: %5.1f   roll: %5.1f", pitch_d, roll_d))
 
 			// Output magnetometer readings
+			var xRawM, yRawM, zRawM int16
 			if magnetometer != nil {
-				xRaw, yRaw, zRaw, err = magnetometer.SenseRaw()
+				xRawM, yRawM, zRawM, err = magnetometer.SenseRaw()
 				if err != nil {
 					panic(err)
 				}
 			} else {
-				xRaw = int16(-10 + rand.Intn(21))
-				yRaw = int16(-10 + rand.Intn(21))
-				zRaw = int16(-10 + rand.Intn(21))
+				xRawM = int16(-10 + rand.Intn(21))
+				yRawM = int16(-10 + rand.Intn(21))
+				zRawM = int16(-10 + rand.Intn(21))
 			}
-			xMinFlux = min(xRaw, xMinFlux)
-			yMinFlux = min(yRaw, yMinFlux)
-			zMinFlux = min(zRaw, zMinFlux)
-			xMaxFlux = max(xRaw, xMaxFlux)
-			yMaxFlux = max(yRaw, yMaxFlux)
-			zMaxFlux = max(zRaw, zMaxFlux)
-			writeString("  Magnetometer", line)
-			line++
-			writeString(fmt.Sprintf("x: %v, min: %v, max: %v", xRaw, xMinFlux, xMaxFlux), line)
-			line++
-			writeString(fmt.Sprintf("y: %v, min: %v, max: %v", yRaw, yMinFlux, yMaxFlux), line)
-			line++
-			writeString(fmt.Sprintf("z: %v, min: %v, max: %v", zRaw, zMinFlux, zMaxFlux), line)
-			line++
+			xMinFlux = min(xRawM, xMinFlux)
+			yMinFlux = min(yRawM, yMinFlux)
+			zMinFlux = min(zRawM, zMinFlux)
+			xMaxFlux = max(xRawM, xMaxFlux)
+			yMaxFlux = max(yRawM, yMaxFlux)
+			zMaxFlux = max(zRawM, zMaxFlux)
+
+			xHorizontal := float64(xRawM)*math.Cos(pitch_r) + float64(yRawM)*math.Sin(roll_r)*math.Sin(pitch_r) - float64(zRawM)*math.Cos(roll_r)*math.Sin(pitch_r)
+			yHorizontal := float64(yRawM)*math.Cos(roll_r) + float64(zRawM)*math.Sin(roll_r)
+
+			writer.WriteLine("=== Magnetometer ===")
+			writer.WriteLine(fmt.Sprintf("x: %v, min: %v, max: %v", xRawM, xMinFlux, xMaxFlux))
+			writer.WriteLine(fmt.Sprintf("y: %v, min: %v, max: %v", yRawM, yMinFlux, yMaxFlux))
+			writer.WriteLine(fmt.Sprintf("z: %v, min: %v, max: %v", zRawM, zMinFlux, zMaxFlux))
+			writer.WriteLine(fmt.Sprintf("heading: %v", glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))))
 
 			// Output button state
 			var buttonState rpio.State
@@ -274,16 +278,14 @@ loop:
 			} else {
 				buttonState = rpio.High
 			}
-			writeString("  Button", line)
-			line++
+			writer.WriteLine("=== Button ===")
 			buttonStateString := "unknown"
 			if buttonState == rpio.High {
 				buttonStateString = "high"
 			} else if buttonState == rpio.Low {
 				buttonStateString = "low"
 			}
-			writeString(fmt.Sprintf("%v", buttonStateString), line)
-			line++
+			writer.WriteLine(fmt.Sprintf("%v", buttonStateString))
 
 			// Output temperature
 			var value_c float32
@@ -294,20 +296,22 @@ loop:
 				}
 				value_c = float32(temperature-physic.ZeroCelsius) / float32(physic.Celsius)
 			}
-			writeString("  Temperature", line)
-			line++
-			writeString(fmt.Sprintf("%v", value_c), line)
-			line++
+			writer.WriteLine("=== Temperature ===")
+			writer.WriteLine(fmt.Sprintf("%v", value_c))
 
 			termbox.Flush()
 		}
 	}
 }
 
-func writeString(str string, y int) {
+type StringWriter struct {
+	Line int
+}
+func (writer *StringWriter) WriteLine(str string) {
 	for x := 0; x < len(str); x++ {
-		termbox.SetCell(x, y, rune(str[x]), termbox.ColorWhite, termbox.ColorBlack)
+		termbox.SetCell(x, writer.Line, rune(str[x]), termbox.ColorWhite, termbox.ColorBlack)
 	}
+	writer.Line++
 }
 
 func min(a, b int16) int16 {

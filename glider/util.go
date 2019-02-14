@@ -3,6 +3,7 @@ package glider
 import (
 	"io/ioutil"
 	"log"
+	"math"
 	"strings"
 	"testing"
 	"time"
@@ -137,3 +138,7 @@ type blinkDurationConstants struct {
 }
 
 var blinkDurations blinkDurationConstants
+
+func ToDegrees(radians float32) Degrees {
+	return radians * (180.0 / math.Pi)
+}

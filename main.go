@@ -13,7 +13,7 @@ import (
 
 func main() {
 	if os.Getuid() != 0 {
-		fmt.Print("Must run as root")
+		fmt.Println("Must run as root")
 		return
 	}
 
@@ -36,7 +36,7 @@ func main() {
 
 		runGlide()
 	} else {
-		fmt.Println("Nothing to do")
+		flag.PrintDefaults()
 	}
 }
 
@@ -68,16 +68,16 @@ func runGlide() {
 	if timestamp != 0 {
 		now := time.Unix(timestamp, 0)
 		formatted := now.Format("Jan 2 15:04:05 -0700 MST")
-		fmt.Printf("Setting timestamp to %v (%v)\n", timestamp, formatted)
-		fmt.Printf("Running `date +%%s -s @%v\n", fmt.Sprintf("@%v", timestamp))
+		glider.Logger.Infof("Setting timestamp to %v (%v)\n", timestamp, formatted)
+		glider.Logger.Debugf("Running `date +%%s -s @%v\n", fmt.Sprintf("@%v", timestamp))
 		command := exec.Command("date", "+%s", "-s", fmt.Sprintf("@%v", timestamp))
 		err := command.Run()
 		if err != nil {
-			fmt.Printf("Unable to set time: %v\n", err)
+			glider.Logger.Errorf("Unable to set time: %v\n", err)
 		}
 		timeSet = true
 	} else {
-		fmt.Println("No timestamp received from GPS")
+		glider.Logger.Warningf("No timestamp received from GPS")
 	}
 
 	logName := getLogName(timeSet)
@@ -104,7 +104,7 @@ func getLogName(timeSet bool) string {
 		// Just list the files in numerical order
 		entries, err := ioutil.ReadDir(".")
 		if err != nil {
-			fmt.Printf("Unable to list directory contents: %v\n", err)
+			glider.Logger.Errorf("Unable to list directory contents: %v\n", err)
 		} else {
 			for fileNumber := 1; fileNumber < 100; fileNumber++ {
 				logName = fmt.Sprintf("%d.log", fileNumber)

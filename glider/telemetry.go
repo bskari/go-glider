@@ -105,11 +105,13 @@ func NewTelemetry() (*Telemetry, error) {
 
 func (telemetry *Telemetry) GetAxes() (Axes, error) {
 	xRawA, yRawA, zRawA, err := telemetry.accelerometer.SenseRaw()
+	Logger.Debugf("accel %v %v %v", xRawA, yRawA, zRawA)
 	if err != nil {
 		return Axes{0, 0, 0}, err
 	}
 
-	xRawM, yRawM, _, err := telemetry.magnetometer.SenseRaw()
+	xRawM, yRawM, zRawM, err := telemetry.magnetometer.SenseRaw()
+	Logger.Debugf("mag %v %v %v", xRawM, yRawM, zRawM)
 	if err != nil {
 		return Axes{0, 0, 0}, err
 	}
@@ -119,15 +121,21 @@ func (telemetry *Telemetry) GetAxes() (Axes, error) {
 		zRawA = 1
 	}
 
-	y2 := yRawA * yRawA
-	z2 := zRawA * zRawA
+	y2 := int32(yRawA) * int32(yRawA)
+	z2 := int32(zRawA) * int32(zRawA)
+
+	// Tilt compensated compass readings
+	pitch_r := math.Atan2(-float64(xRawA), math.Sqrt(float64(y2+z2)))
+	roll_r := math.Atan2(float64(yRawA), float64(zRawA))
+	xHorizontal := float64(xRawM)*math.Cos(pitch_r) + float64(yRawM)*math.Sin(roll_r)*math.Sin(pitch_r) - float64(zRawM)*math.Cos(roll_r)*math.Sin(pitch_r)
+	yHorizontal := float64(yRawM)*math.Cos(roll_r) + float64(zRawM)*math.Sin(roll_r)
 
 	// The roll calculation assumes that -x is forward, +y is right, and
 	// +z is down
 	return Axes{
-		Pitch: Degrees(math.Atan2(float64(xRawA), math.Sqrt(float64(y2+z2)))),
-		Roll:  Degrees(math.Atan2(float64(yRawA), float64(zRawA))),
-		Yaw:   Degrees(math.Atan2(float64(yRawM), float64(xRawM))),
+		Pitch: ToDegrees(float32(pitch_r)),
+		Roll:  ToDegrees(float32(roll_r)),
+		Yaw:   ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal))),
 	}, nil
 }
 
