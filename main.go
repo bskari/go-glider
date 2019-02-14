@@ -1,12 +1,17 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"github.com/bskari/go-glider/glider"
 )
 
 func main() {
-	fmt.Println("Hello, world!")
-	telemetry := glider.NewTelemetry()
-	fmt.Printf("Heading %v\n", telemetry.GetHeading())
+	dumpSensorsPtr := flag.Bool("dump", false, "Dump the sensor data")
+	flag.Parse()
+
+	if *dumpSensorsPtr {
+		dumpSensors()
+	} else {
+		fmt.Println("TODO: Run the glider code")
+	}
 }

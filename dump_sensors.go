@@ -3,24 +3,27 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"github.com/tarm/serial"
+	"log"
 	"time"
 )
 
-
-func main() {
+func dumpSensors() {
 	config := serial.Config{Name: "/dev/ttyS0", Baud: 9600, ReadTimeout: time.Millisecond * 0}
 	gps_, err := serial.OpenPort(&config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	gps := bufio.NewScanner(gps_)
+	gps := bufio.NewReader(gps_)
 
 	for true {
-		text := gps.Text()
+		text, err := gps.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
 		if text != "" {
-			fmt.Println(text)
+			// text should end in newline anyway
+			fmt.Print(text)
 		}
 		time.Sleep(time.Millisecond * 250)
 	}

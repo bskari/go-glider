@@ -53,7 +53,6 @@ func (fakeGps *FakeGps) Read(buffer []byte) (count int, err error) {
 }
 
 func TestGetPosition(t *testing.T) {
-	t.Skip("I can't get this fake Reader to work")
 	fakeGps := &FakeGps{lines: make([]string, 0), count: 0}
 	// Easy case: each read returns a full sentence
 	fakeGps.lines = append(fakeGps.lines, "$GPRMC,081836,A,3700.00,N,13300.00,W,000.0,360.0,130998,011.3,E*69\n")
@@ -78,7 +77,7 @@ func TestGetPosition(t *testing.T) {
 	telemetry := Telemetry{
 		previousPoint: Point{Latitude_d: 40.0, Longitude_d: -105.2, Altitude_m: 1655},
 		lastMps:       0.0,
-		gps:           bufio.NewScanner(fakeGps),
+		gps:           bufio.NewReader(fakeGps),
 	}
 
 	telemetry.GetPosition()

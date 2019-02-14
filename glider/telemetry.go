@@ -33,18 +33,18 @@ type Point struct {
 type Telemetry struct {
 	previousPoint Point
 	lastMps       float32
-	gps           *bufio.Scanner
+	gps           *bufio.Reader
 }
 
 func NewTelemetry() Telemetry {
-	var gps *bufio.Scanner
+	var gps *bufio.Reader
 	if isPi() {
 		config := serial.Config{Name: "/dev/ttyS0", Baud: 9600, ReadTimeout: time.Millisecond * 0}
 		gps_, err := serial.OpenPort(&config)
 		if err != nil {
 			log.Fatal(err)
 		}
-		gps = bufio.NewScanner(gps_)
+		gps = bufio.NewReader(gps_)
 	} else {
 		gps = nil
 	}
@@ -60,7 +60,10 @@ func (telemetry *Telemetry) GetHeading() float32 {
 }
 
 func (telemetry *Telemetry) GetPosition() Point {
-	line := telemetry.gps.Text()
+	line, err := telemetry.gps.ReadString('\n')
+	if err != nil {
+		log.Fatalf("Failed to read from GPS: %v", err)
+	}
 	if line != "" {
 		telemetry.parseSentence(line)
 	}
