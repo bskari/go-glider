@@ -187,7 +187,7 @@ loop:
 			*/
 
 			// Output accelerometer readings
-			var x, y, z physic.Force
+			var x, y, z physic.Speed
 			var xRawA, yRawA, zRawA int16
 			if accelerometer != nil {
 				x, y, z, err = accelerometer.Sense()
@@ -199,11 +199,11 @@ loop:
 					panic(err)
 				}
 			} else {
-				offset := -int64(physic.EarthGravity) / 10
-				randRange := int64(physic.EarthGravity) / 5
-				x = physic.Force(offset + rand.Int63n(randRange))
-				y = physic.Force(offset + rand.Int63n(randRange))
-				z = physic.Force(offset+rand.Int63n(randRange)) + physic.EarthGravity
+				offset := -int64(physic.MetrePerSecond) / 10
+				randRange := int64(physic.MetrePerSecond) / 5
+				x = physic.Speed(offset + rand.Int63n(randRange))
+				y = physic.Speed(offset + rand.Int63n(randRange))
+				z = physic.Speed(offset+rand.Int63n(randRange) + int64(9.8 * float64(physic.MetrePerSecond)))
 				xRawA = int16(-10 + rand.Intn(21))
 				yRawA = int16(-10 + rand.Intn(21))
 				zRawA = int16(90 + rand.Intn(21))
@@ -257,9 +257,9 @@ loop:
 			} else {
 				offset := -int64(physic.EarthGravity) / 10
 				randRange := int64(physic.EarthGravity) / 5
-				x = physic.Force(offset + rand.Int63n(randRange))
-				y = physic.Force(offset + rand.Int63n(randRange))
-				z = physic.Force(offset+rand.Int63n(randRange)) + physic.EarthGravity
+				x = physic.Speed(offset + rand.Int63n(randRange))
+				y = physic.Speed(offset + rand.Int63n(randRange))
+				z = physic.Speed(offset+rand.Int63n(randRange)) + physic.EarthGravity
 				xRawM = int16(-10 + rand.Intn(21))
 				yRawM = int16(-10 + rand.Intn(21))
 				zRawM = int16(-10 + rand.Intn(21))

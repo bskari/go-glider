@@ -112,18 +112,18 @@ func (a* Adxl345) SenseRaw() (int16, int16, int16, error) {
 }
 
 
-func (a* Adxl345) Sense() (physic.Force, physic.Force, physic.Force, error) {
+func (a* Adxl345) Sense() (physic.Speed, physic.Speed, physic.Speed, error) {
 	const multiplier = 0.0039
 	const gravity_ms2 = 9.80665
-	const adjustment = multiplier * gravity_ms2
+	const adjustment = physic.Speed(multiplier * gravity_ms2 * float64(physic.MetrePerSecond))
 	xRaw, yRaw, zRaw, err := a.SenseRaw()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	xValue := physic.Force(float64(xRaw) * adjustment)
-	yValue := physic.Force(float64(yRaw) * adjustment)
-	zValue := physic.Force(float64(zRaw) * adjustment)
+	xValue := physic.Speed(float64(xRaw)) * adjustment
+	yValue := physic.Speed(float64(yRaw)) * adjustment
+	zValue := physic.Speed(float64(zRaw)) * adjustment
 	return xValue, yValue, zValue, err
 }
 
