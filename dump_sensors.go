@@ -1,19 +1,18 @@
 package main
 
 import (
-	"bufio"
+	//"bufio"
 	"fmt"
 	"github.com/bskari/go-glider/glider"
-	"github.com/bskari/go-lsm303"
 	"github.com/nsf/termbox-go"
 	"github.com/stianeikeland/go-rpio/v4"
-	"github.com/tarm/serial"
+	//"github.com/tarm/serial"
 	"math"
 	"math/rand"
 	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/host"
-	"sort"
+	//"sort"
 	"time"
 )
 
@@ -48,6 +47,7 @@ func (reader dummyReader) Read(buffer []byte) (n int, err error) {
 }
 
 func dumpSensors() {
+	/*
 	// Set up the GPS
 	var gps *bufio.Reader
 	if glider.IsPi() {
@@ -64,10 +64,11 @@ func dumpSensors() {
 	} else {
 		gps = bufio.NewReader(dummyReader{})
 	}
+	*/
 
 	// Set up accelerometer and magnetometer
-	var accelerometer *lsm303.Accelerometer
-	var magnetometer *lsm303.Magnetometer
+	var accelerometer *glider.Adxl345
+	//var magnetometer *glider.Adxl345 = nil
 	if glider.IsPi() {
 		// Make sure periph is initialized.
 		if _, err := host.Init(); err != nil {
@@ -81,18 +82,12 @@ func dumpSensors() {
 		}
 		defer bus.Close()
 
-		accelerometer, err = lsm303.NewAccelerometer(bus, &lsm303.DefaultAccelerometerOpts)
-		if err != nil {
-			panic(err)
-		}
-
-		magnetometer, err = lsm303.NewMagnetometer(bus, &lsm303.DefaultMagnetometerOpts)
+		accelerometer, err = glider.NewAdxl345(bus)
 		if err != nil {
 			panic(err)
 		}
 	} else {
 		accelerometer = nil
-		magnetometer = nil
 	}
 
 	// Set up button
@@ -118,7 +113,7 @@ func dumpSensors() {
 		}
 	}()
 
-	gpsMessageTypeToMessage := make(map[string]string)
+	//gpsMessageTypeToMessage := make(map[string]string)
 	xMinMps := math.MaxFloat64
 	yMinMps := math.MaxFloat64
 	zMinMps := math.MaxFloat64
@@ -131,12 +126,14 @@ func dumpSensors() {
 	xMaxAccelerometerRaw := int16(-math.MaxInt16)
 	yMaxAccelerometerRaw := int16(-math.MaxInt16)
 	zMaxAccelerometerRaw := int16(-math.MaxInt16)
+	/*
 	xMinFlux := int16(math.MaxInt16)
 	yMinFlux := int16(math.MaxInt16)
 	zMinFlux := int16(math.MaxInt16)
 	xMaxFlux := int16(math.MinInt16)
 	yMaxFlux := int16(math.MinInt16)
 	zMaxFlux := int16(math.MinInt16)
+	*/
 
 	// Let's also test out the LED status indicator
 	statusIndicator := glider.NewLedStatusIndicator(3)
@@ -167,6 +164,7 @@ loop:
 		default:
 			writer.Line = 0
 
+			/*
 			// Read from the GPS
 			text, err := gps.ReadString('\n')
 			if err != nil {
@@ -186,6 +184,7 @@ loop:
 			for _, type_ := range gpsTypes {
 				writer.IndentLine(gpsMessageTypeToMessage[type_])
 			}
+			*/
 
 			// Output accelerometer readings
 			var x, y, z physic.Force
@@ -211,8 +210,8 @@ loop:
 			}
 			x2 := int32(xRawA) * int32(xRawA)
 			z2 := int32(zRawA) * int32(zRawA)
-			pitch_r := math.Atan(-float64(xRawA) / math.Sqrt(float64(x2+z2)))
-			roll_r := math.Atan2(float64(yRawA), float64(zRawA))
+			pitch_r := math.Atan(float64(yRawA) / math.Sqrt(float64(x2+z2)))
+			roll_r := -math.Atan2(float64(xRawA), float64(zRawA))
 			pitch_d := glider.ToDegrees(float32(pitch_r))
 			roll_d := glider.ToDegrees(float32(roll_r))
 
@@ -243,6 +242,7 @@ loop:
 
 			writer.IndentLine(fmt.Sprintf("pitch: %5.1f   roll: %5.1f", pitch_d, roll_d))
 
+			/*
 			// Output magnetometer readings
 			var xRawM, yRawM, zRawM int16
 			if magnetometer != nil {
@@ -285,6 +285,7 @@ loop:
 			writer.IndentLine(fmt.Sprintf("y: %v, min: %v, max: %v", yRawM, yMinFlux, yMaxFlux))
 			writer.IndentLine(fmt.Sprintf("z: %v, min: %v, max: %v", zRawM, zMinFlux, zMaxFlux))
 			writer.IndentLine(fmt.Sprintf("heading: %v", heading_d))
+			*/
 
 			// Output button state
 			var buttonState rpio.State
@@ -302,6 +303,7 @@ loop:
 			}
 			writer.IndentLine(fmt.Sprintf("%v", buttonStateString))
 
+			/*
 			// Output temperature
 			var value_c float32
 			if magnetometer != nil {
@@ -313,6 +315,7 @@ loop:
 			}
 			writer.WriteLine("=== Temperature ===")
 			writer.IndentLine(fmt.Sprintf("%v", value_c))
+			*/
 
 			termbox.Flush()
 		}
