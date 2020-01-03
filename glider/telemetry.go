@@ -3,7 +3,6 @@ package glider
 import (
 	"github.com/adrianmo/go-nmea"
 	"github.com/argandas/serial"
-	"log"
 	"math"
 	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/host"
@@ -302,7 +301,7 @@ func (telemetry *Telemetry) parseSentence(sentence string) {
 	if strings.HasPrefix(sentence, "$GPRMC") {
 		parsed, err := nmea.Parse(sentence)
 		if err != nil {
-			log.Printf("Failed to parse GPRMC message '%v': %v\n", sentence, err)
+			Logger.Errorf("Failed to parse GPRMC message '%v': %v\n", sentence, err)
 			return
 		}
 		message := parsed.(nmea.RMC)
@@ -325,7 +324,7 @@ func (telemetry *Telemetry) parseSentence(sentence string) {
 	} else if strings.HasPrefix(sentence, "$GPGGA") {
 		parsed, err := nmea.Parse(sentence)
 		if err != nil {
-			log.Printf("Failed to parse GPRMC message %v\n", sentence)
+			Logger.Errorf("Failed to parse GPRMC message %v\n", sentence)
 			return
 		}
 		message := parsed.(nmea.GGA)
@@ -335,7 +334,7 @@ func (telemetry *Telemetry) parseSentence(sentence string) {
 	} else if strings.HasPrefix(sentence, "$GPVTG") {
 		parsed, err := nmea.Parse(sentence)
 		if err != nil {
-			log.Printf("Failed to parse GPRMC message %v\n", sentence)
+			Logger.Errorf("Failed to parse GPRMC message %v\n", sentence)
 			return
 		}
 		message := parsed.(nmea.VTG)

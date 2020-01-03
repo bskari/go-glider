@@ -5,7 +5,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"io"
 	"io/ioutil"
-	"log"
 	"math"
 	"strings"
 	"testing"
@@ -22,7 +21,7 @@ func IsPi() bool {
 
 	data, err := ioutil.ReadFile("/proc/cpuinfo")
 	if err != nil {
-		log.Fatal("couldn't open /proc/cpuinfo")
+		Logger.Errorf("couldn't open /proc/cpuinfo")
 	}
 
 	isPi = strings.Contains(string(data), "ARM")
