@@ -208,7 +208,7 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 	// We need to figure out the x, y, and z components that are off
 	// and then add those above to the raw values.
 
-	pitch_r += configuration.PitchOffset
+	pitch_r -= configuration.PitchOffset
 	for pitch_r < ToRadians(-180.0) {
 		pitch_r += ToRadians(360.0)
 	}
@@ -216,7 +216,7 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 		pitch_r -= ToRadians(360.0)
 	}
 
-	roll_r += configuration.RollOffset
+	roll_r -= configuration.RollOffset
 	for roll_r < ToRadians(-180.0) {
 		roll_r += ToRadians(360.0)
 	}

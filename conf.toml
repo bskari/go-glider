@@ -14,10 +14,12 @@ DefaultWaypointLatitude = 40.015
 DefaultWaypointLongitude = -105.270
 
 # **** Telemetry ****
-# The pitch reading when the plane is level
-PitchOffset_d = -5.2
-# The roll reading when the plane is level
-RollOffset_d = 2.3
+# The pitch reading when the plane is level. This will be subtracted in the
+# calculation to get the true pitch.
+PitchOffset_d = 3.3
+# The roll reading when the plane is level. This will be subtracted int he
+# calculation to get the true roll.
+RollOffset_d = 0.0
 # Hard offset readings from the magnetometer
 MagnetometerXMax_t = 19.182
 MagnetometerXMin_t = -24.727
