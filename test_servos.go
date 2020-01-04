@@ -35,22 +35,22 @@ func testServos() {
 
 func controlTest() {
 	control := glider.NewControl()
-	angle := float32(45.0)
+	angle := glider.Degrees(45.0)
 
 	// Pause a bit after setting the first angle
 	fmt.Printf("Setting angle to %v\n", angle)
-	control.SetLeft(angle)
+	control.SetLeft(glider.ToRadians(angle))
 	time.Sleep(250 * time.Millisecond)
-	control.SetRight(angle)
+	control.SetRight(glider.ToRadians(angle))
 	time.Sleep(250 * time.Millisecond)
 	angle += 5.0
 	time.Sleep(3 * time.Second)
 
 	for angle < 90.0+45.0 {
 		fmt.Printf("Setting angle to %v\n", angle)
-		control.SetLeft(angle)
+		control.SetLeft(glider.ToRadians(angle))
 		time.Sleep(250 * time.Millisecond)
-		control.SetRight(angle)
+		control.SetRight(glider.ToRadians(angle))
 		time.Sleep(250 * time.Millisecond)
 		angle += 5.0
 	}
@@ -60,9 +60,9 @@ func controlTest() {
 	// Reset back to 90
 	angle = 90
 	fmt.Printf("Setting angle to %v\n", angle)
-	control.SetLeft(angle)
+	control.SetLeft(glider.ToRadians(angle))
 	time.Sleep(5 * time.Millisecond)
-	control.SetRight(angle)
+	control.SetRight(glider.ToRadians(angle))
 	time.Sleep(1 * time.Second)
 }
 
