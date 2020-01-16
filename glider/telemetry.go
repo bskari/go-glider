@@ -264,9 +264,11 @@ func (telemetry *Telemetry) ParseQueuedMessage() (bool, error) {
 }
 
 func (telemetry *Telemetry) GetPosition() Point {
+	// TODO: Hook up GPS and return real readings
 	temp := Point{
-		Latitude:  40.00,
-		Longitude: -105.23,
+		// Solid State Depot
+		Latitude:  40.020,
+		Longitude: -105.250,
 		Altitude:  1609,
 	}
 	return temp
