@@ -234,24 +234,20 @@ func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radian
 
 	// Let's only move the servo when it's changed a little so that the
 	// servo isn't freaking out due to noisy sensors
-	difference_r := math.Abs(float64(pilot.previousUpdateRoll_r - axes.Roll))
-	difference_r += math.Abs(float64(pilot.previousUpdatePitch_r - axes.Pitch))
+	difference_r := float32(math.Abs(float64(pilot.previousUpdateRoll_r - axes.Roll)))
+	difference_r += float32(math.Abs(float64(pilot.previousUpdatePitch_r - axes.Pitch)))
 
-	/*
-		fmt.Printf("roll:%v targetRoll:%v\n", ToDegrees(axes.Roll), ToDegrees(targetRoll))
-		fmt.Printf("pitch:%v targetPitch:%v\n", ToDegrees(axes.Pitch), ToDegrees(targetPitch))
-		fmt.Printf("leftAngle:%v rightAngle:%v\n", ToDegrees(leftAngle), ToDegrees(rightAngle))
-	*/
-	if difference_r < float64(ToRadians(4)) {
+	//fmt.Printf("roll:%v targetRoll:%v\n", ToDegrees(axes.Roll), ToDegrees(targetRoll_r))
+	//fmt.Printf("pitch:%v targetPitch:%v\n", ToDegrees(axes.Pitch), ToDegrees(targetPitch_r))
+	//fmt.Printf("leftAngle:%v rightAngle:%v\n", ToDegrees(leftAngle_r), ToDegrees(rightAngle_r))
+	if difference_r < ToRadians(4) {
 		//fmt.Printf("Difference %v is too low\n\n", ToDegrees(difference_r))
 		return
 	}
 
 	pilot.previousUpdateRoll_r = axes.Roll
 	pilot.previousUpdatePitch_r = axes.Pitch
-	leftAngle_r = roundToUnit(leftAngle_r, 3)
-	rightAngle_r = roundToUnit(rightAngle_r, 3)
-	//fmt.Printf("Setting leftAngle:%v rightAngle:%v\n\n", ToDegrees(leftAngle), ToDegrees(rightAngle))
+	//fmt.Printf("Setting leftAngle:%v rightAngle:%v\n\n", ToDegrees(leftAngle_r), ToDegrees(rightAngle_r))
 	pilot.control.SetLeft(ToRadians(90) + leftAngle_r)
 	pilot.control.SetRight(ToRadians(90) + rightAngle_r)
 }
@@ -265,13 +261,6 @@ func getTargetRoll(yaw_r Radians, position, waypoint Point) Radians {
 	targetRoll_r := adjustHeading_r * configuration.ProportionalTargetRollMultiplier
 	targetRoll_r = clamp(targetRoll_r, -configuration.MaxTargetRoll, configuration.MaxTargetRoll)
 	return targetRoll_r
-}
-
-func roundToUnit(x, unit float32) float32 {
-	bigX := float64(x)
-	bigUnit := float64(unit)
-	value := math.Round(bigX/bigUnit) * bigUnit
-	return float32(value)
 }
 
 func clamp(value, minimum, maximum float32) float32 {
