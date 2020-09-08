@@ -38,7 +38,7 @@ type Telemetry struct {
 
 func NewTelemetry() Telemetry {
 	var gps *bufio.Reader
-	if isPi() {
+	if IsPi() {
 		config := serial.Config{Name: "/dev/ttyS0", Baud: 9600, ReadTimeout: time.Millisecond * 0}
 		gps_, err := serial.OpenPort(&config)
 		if err != nil {

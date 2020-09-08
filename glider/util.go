@@ -9,7 +9,7 @@ import (
 
 var isPiCache = false
 
-func isPi() bool {
+func IsPi() bool {
 	if isPiCache {
 		return true
 	}
@@ -28,7 +28,7 @@ func isPi() bool {
 }
 
 func skipIfNotPi(t *testing.T) {
-	if !isPi() {
+	if !IsPi() {
 		t.Skip("Skipping non-Pi")
 	}
 }
