@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"github.com/bskari/go-glider/glider"
+	i2c "github.com/d2r2/go-i2c"
 	"github.com/nsf/termbox-go"
 	"github.com/tarm/serial"
 	"math/rand"
@@ -25,7 +26,19 @@ func (reader dummyReader) Read(buffer []byte) (n int, err error) {
 	}
 }
 
+const LSM303_ADDRESS_ACCELEROMETER = (0x32 >> 1)
+const LSM303_ADDRESS_MAGNETOMETER = (0x3C >> 1)
+const LSM303_ID = 0xD4
+
+type Degrees float32
+
+func myCos(value Degrees) float32 {
+	return float32(value + 10.0)
+}
+
 func dumpSensors() {
+	myCos(float32(35.0))
+	// Set up GPS
 	var gps *bufio.Reader
 	if glider.IsPi() {
 		config := serial.Config{Name: "/dev/ttyS0", Baud: 9600, ReadTimeout: time.Millisecond * 0}
@@ -38,6 +51,22 @@ func dumpSensors() {
 		gps = bufio.NewReader(dummyReader{})
 	}
 
+	// Set up accelerometer and magnetometer
+	if glider.IsPi() {
+		accelerometer, err := i2c.NewI2C(LSM303_ADDRESS_ACCELEROMETER, 2)
+		if err != nil {
+			panic(err)
+		}
+		defer accelerometer.Close()
+
+		magnetometer, err := i2c.NewI2C(LSM303_ADDRESS_MAGNETOMETER, 2)
+		if err != nil {
+			panic(err)
+		}
+		defer magnetometer.Close()
+	}
+
+	// Set up display
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
