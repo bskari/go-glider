@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"github.com/bskari/go-glider/glider"
-	i2c "github.com/d2r2/go-i2c"
+	"github.com/bskari/go-lsm303"
 	"github.com/nsf/termbox-go"
 	"github.com/tarm/serial"
 	"math/rand"
+	"periph.io/x/periph/conn/i2c/i2creg"
+	"periph.io/x/periph/host"
 	"time"
 )
 
@@ -26,18 +28,9 @@ func (reader dummyReader) Read(buffer []byte) (n int, err error) {
 	}
 }
 
-const LSM303_ADDRESS_ACCELEROMETER = (0x32 >> 1)
-const LSM303_ADDRESS_MAGNETOMETER = (0x3C >> 1)
-const LSM303_ID = 0xD4
-
 type Degrees float32
 
-func myCos(value Degrees) float32 {
-	return float32(value + 10.0)
-}
-
 func dumpSensors() {
-	myCos(float32(35.0))
 	// Set up GPS
 	var gps *bufio.Reader
 	if glider.IsPi() {
@@ -53,17 +46,23 @@ func dumpSensors() {
 
 	// Set up accelerometer and magnetometer
 	if glider.IsPi() {
-		accelerometer, err := i2c.NewI2C(LSM303_ADDRESS_ACCELEROMETER, 2)
-		if err != nil {
+		// Make sure periph is initialized.
+		if _, err := host.Init(); err != nil {
 			panic(err)
 		}
-		defer accelerometer.Close()
 
-		magnetometer, err := i2c.NewI2C(LSM303_ADDRESS_MAGNETOMETER, 2)
+		// Open a connection, using I²C as an example:
+		bus, err := i2creg.Open("")
 		if err != nil {
 			panic(err)
 		}
-		defer magnetometer.Close()
+		defer bus.Close()
+
+		accelerometer, err := lsm303.NewAccelerometer(bus, &lsm303.DefaultOpts)
+		if err != nil {
+			panic(err)
+		}
+		accelerometer.Sense()
 	}
 
 	// Set up display
