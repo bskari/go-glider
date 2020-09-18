@@ -21,13 +21,26 @@ type dummyReader struct {
 }
 
 func (reader dummyReader) Read(buffer []byte) (n int, err error) {
-	const rmc = "$GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*65\n"
-	// Only return data X% of the time
+	var message string
+	switch rand.Intn(4) {
+	case 0:
+		message = fmt.Sprintf("$GPRMC,081836,A,4000.%02d,N,10500.%02d,W,000.0,360.0,130998,011.3,E*65\n", rand.Intn(100), rand.Intn(100))
+	case 1:
+		message = "$GPGSA,A,3,,,,,,16,18,,22,24,,,3.6,2.1,2.2*3C\n"
+	case 2:
+		message = fmt.Sprintf("$GPGGA,134658.00,4000.%04d,N,10500.%04d,W,2,09,1.0,1048.47,M,-16.27,M,08,AAAA*60\n", rand.Intn(10000), rand.Intn(10000))
+	case 3:
+		message = fmt.Sprintf("$GPGLL,4000.%02d,N,10500.%02d,W,225444,A\n", rand.Intn(100), rand.Intn(100))
+	default:
+		message = "bad switch in test data\n"
+	}
+
+	// Only return data some of the time
 	if rand.Intn(100) < 10 {
-		for i := 0; i < len(rmc); i++ {
-			buffer[i] = rmc[i]
+		for i := 0; i < len(message) && i < len(buffer); i++ {
+			buffer[i] = message[i]
 		}
-		return len(rmc), nil
+		return len(message), nil
 	} else {
 		return 0, nil
 	}
@@ -128,24 +141,33 @@ loop:
 			}
 
 			// Output accelerometer readings
+			var x physic.Force
+			var y physic.Force
+			var z physic.Force
 			if accelerometer != nil {
-				x, y, z := accelerometer.Sense()
-				xMps := float64(x) / float64(physic.Newton)
-				yMps := float64(y) / float64(physic.Newton)
-				zMps := float64(z) / float64(physic.Newton)
-				xMinMps = math.Min(xMps, xMinMps)
-				yMinMps = math.Min(yMps, yMinMps)
-				zMinMps = math.Min(zMps, zMinMps)
-				xMaxMps = math.Max(xMps, xMaxMps)
-				yMaxMps = math.Max(yMps, yMaxMps)
-				zMaxMps = math.Max(zMps, zMaxMps)
-				writeString(fmt.Sprintf("x mps: %v, min: %v, max: %v", xMps, xMinMps, xMaxMps), line)
-				line++
-				writeString(fmt.Sprintf("y mps: %v, min: %v, max: %v", yMps, yMinMps, yMaxMps), line)
-				line++
-				writeString(fmt.Sprintf("z mps: %v, min: %v, max: %v", zMps, zMinMps, zMaxMps), line)
-				line++
+				x, y, z = accelerometer.Sense()
+			} else {
+				offset := -int64(physic.EarthGravity) / 10
+				randRange := int64(physic.EarthGravity) / 5
+				x = physic.Force(offset + rand.Int63n(randRange))
+				y = physic.Force(offset + rand.Int63n(randRange))
+				z = physic.Force(offset + rand.Int63n(randRange)) + physic.EarthGravity
 			}
+			xMps := float64(x) / float64(physic.Newton)
+			yMps := float64(y) / float64(physic.Newton)
+			zMps := float64(z) / float64(physic.Newton)
+			xMinMps = math.Min(xMps, xMinMps)
+			yMinMps = math.Min(yMps, yMinMps)
+			zMinMps = math.Min(zMps, zMinMps)
+			xMaxMps = math.Max(xMps, xMaxMps)
+			yMaxMps = math.Max(yMps, yMaxMps)
+			zMaxMps = math.Max(zMps, zMaxMps)
+			writeString(fmt.Sprintf("x mps: %6.3f, min: %6.3f, max: %6.3f", xMps, xMinMps, xMaxMps), line)
+			line++
+			writeString(fmt.Sprintf("y mps: %6.3f, min: %6.3f, max: %6.3f", yMps, yMinMps, yMaxMps), line)
+			line++
+			writeString(fmt.Sprintf("z mps: %6.3f, min: %6.3f, max: %6.3f", zMps, zMinMps, zMaxMps), line)
+			line++
 
 			termbox.Flush()
 			time.Sleep(time.Millisecond * 250)
