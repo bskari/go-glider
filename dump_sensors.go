@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/bskari/go-glider/glider"
 	"github.com/bskari/go-lsm303"
 	"github.com/nsf/termbox-go"
 	"github.com/tarm/serial"
-	"fmt"
 	"math"
 	"math/rand"
 	"periph.io/x/periph/conn/i2c/i2creg"
@@ -100,16 +100,16 @@ func dumpSensors() {
 	}()
 
 	gpsMessageTypeToMessage := make(map[string]string)
+	xMinMps := math.MaxFloat64
+	yMinMps := math.MaxFloat64
+	zMinMps := math.MaxFloat64
+	xMaxMps := -math.MaxFloat64
+	yMaxMps := -math.MaxFloat64
+	zMaxMps := -math.MaxFloat64
+
 loop:
 	for {
 		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-
-		xMinMps := math.MaxFloat64
-		yMinMps := math.MaxFloat64
-		zMinMps := math.MaxFloat64
-		xMaxMps := -math.MaxFloat64
-		yMaxMps := -math.MaxFloat64
-		zMaxMps := -math.MaxFloat64
 
 		select {
 		case event := <-eventQueue:
@@ -151,7 +151,7 @@ loop:
 				randRange := int64(physic.EarthGravity) / 5
 				x = physic.Force(offset + rand.Int63n(randRange))
 				y = physic.Force(offset + rand.Int63n(randRange))
-				z = physic.Force(offset + rand.Int63n(randRange)) + physic.EarthGravity
+				z = physic.Force(offset+rand.Int63n(randRange)) + physic.EarthGravity
 			}
 			xMps := float64(x) / float64(physic.Newton)
 			yMps := float64(y) / float64(physic.Newton)
