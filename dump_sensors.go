@@ -48,6 +48,20 @@ func (reader dummyReader) Read(buffer []byte) (n int, err error) {
 
 type Degrees float32
 
+func min(a, b int16) int16 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func max(a, b int16) int16 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 func dumpSensors() {
 	// Set up the GPS
 	var gps *bufio.Reader
@@ -106,6 +120,12 @@ func dumpSensors() {
 	xMaxMps := -math.MaxFloat64
 	yMaxMps := -math.MaxFloat64
 	zMaxMps := -math.MaxFloat64
+	xMinRaw := int16(math.MaxInt16)
+	yMinRaw := int16(math.MaxInt16)
+	zMinRaw := int16(math.MaxInt16)
+	xMaxRaw := int16(-math.MaxInt16)
+	yMaxRaw := int16(-math.MaxInt16)
+	zMaxRaw := int16(-math.MaxInt16)
 
 loop:
 	for {
@@ -141,17 +161,20 @@ loop:
 			}
 
 			// Output accelerometer readings
-			var x physic.Force
-			var y physic.Force
-			var z physic.Force
+			var x, y, z physic.Force
+			var xRaw, yRaw, zRaw int16
 			if accelerometer != nil {
 				x, y, z = accelerometer.Sense()
+				xRaw, yRaw, zRaw = accelerometer.SenseRaw()
 			} else {
 				offset := -int64(physic.EarthGravity) / 10
 				randRange := int64(physic.EarthGravity) / 5
 				x = physic.Force(offset + rand.Int63n(randRange))
 				y = physic.Force(offset + rand.Int63n(randRange))
 				z = physic.Force(offset+rand.Int63n(randRange)) + physic.EarthGravity
+				xRaw = int16(-10 + rand.Intn(21))
+				yRaw = int16(-10 + rand.Intn(21))
+				zRaw = int16(90 + rand.Intn(21))
 			}
 			xMps := float64(x) / float64(physic.Newton)
 			yMps := float64(y) / float64(physic.Newton)
@@ -167,6 +190,19 @@ loop:
 			writeString(fmt.Sprintf("y mps: %6.3f, min: %6.3f, max: %6.3f", yMps, yMinMps, yMaxMps), line)
 			line++
 			writeString(fmt.Sprintf("z mps: %6.3f, min: %6.3f, max: %6.3f", zMps, zMinMps, zMaxMps), line)
+			line++
+
+			xMinRaw = min(xRaw, xMinRaw)
+			yMinRaw = min(yRaw, yMinRaw)
+			zMinRaw = min(zRaw, zMinRaw)
+			xMaxRaw = max(xRaw, xMaxRaw)
+			yMaxRaw = max(yRaw, yMaxRaw)
+			zMaxRaw = max(zRaw, zMaxRaw)
+			writeString(fmt.Sprintf("x raw: %4d, min: %4d, max: %4d", xRaw, xMinRaw, xMaxRaw), line)
+			line++
+			writeString(fmt.Sprintf("y raw: %4d, min: %4d, max: %4d", yRaw, yMinRaw, yMaxRaw), line)
+			line++
+			writeString(fmt.Sprintf("z raw: %4d, min: %4d, max: %4d", zRaw, zMinRaw, zMaxRaw), line)
 			line++
 
 			termbox.Flush()
