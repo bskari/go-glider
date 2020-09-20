@@ -4,11 +4,12 @@ go 1.11
 
 require (
 	github.com/adrianmo/go-nmea v1.3.0
-	github.com/bskari/go-lsm303 v0.0.0-20200920053145-109badcb94cc
+	github.com/bskari/go-lsm303 v0.0.0-20200920073524-2550c70a128f
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/nsf/termbox-go v0.0.0-20200418040025-38ba6e5628f1
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/stianeikeland/go-rpio/v4 v4.4.0
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07

@@ -271,7 +271,7 @@ loop:
 				if err != nil {
 					panic(err)
 				}
-				value_c = float32(temperature - physic.ZeroCelsius) / float32(physic.Celsius)
+				value_c = float32(temperature-physic.ZeroCelsius) / float32(physic.Celsius)
 			}
 			writeString("  Temperature", line)
 			line++

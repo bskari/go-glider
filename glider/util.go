@@ -32,3 +32,27 @@ func skipIfNotPi(t *testing.T) {
 		t.Skip("Skipping non-Pi")
 	}
 }
+
+var previousLed bool
+var ledEnabled = false
+func ToggleLed() error {
+	if !ledEnabled {
+		err := ioutil.WriteFile("/sys/class/leds/led0/trigger", []byte("gpio"), 0644)
+		if err != nil {
+			return err
+		}
+		ledEnabled = true
+	}
+
+	ledValue := "1"
+	if previousLed {
+		ledValue = "0"
+	}
+	previousLed = !previousLed
+
+	err := ioutil.WriteFile("/sys/class/leds/led0/brightness", []byte(ledValue), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
