@@ -177,8 +177,14 @@ loop:
 			var x, y, z physic.Force
 			var xRaw, yRaw, zRaw int16
 			if accelerometer != nil {
-				x, y, z = accelerometer.Sense()
-				xRaw, yRaw, zRaw = accelerometer.SenseRaw()
+				x, y, z, err = accelerometer.Sense()
+				if err != nil {
+					panic(err)
+				}
+				xRaw, yRaw, zRaw, err = accelerometer.SenseRaw()
+				if err != nil {
+					panic(err)
+				}
 			} else {
 				offset := -int64(physic.EarthGravity) / 10
 				randRange := int64(physic.EarthGravity) / 5
@@ -222,7 +228,10 @@ loop:
 
 			// Output magnetometer readings
 			if magnetometer != nil {
-				xRaw, yRaw, zRaw = magnetometer.SenseRaw()
+				xRaw, yRaw, zRaw, err = magnetometer.SenseRaw()
+				if err != nil {
+					panic(err)
+				}
 			} else {
 				xRaw = int16(-10 + rand.Intn(21))
 				yRaw = int16(-10 + rand.Intn(21))
@@ -253,6 +262,20 @@ loop:
 			writeString("  Button", line)
 			line++
 			writeString(fmt.Sprintf("%v", buttonState), line)
+			line++
+
+			// Output temperature
+			var value_c float32
+			if magnetometer != nil {
+				temperature, err := magnetometer.GetTemperature()
+				if err != nil {
+					panic(err)
+				}
+				value_c = float32(temperature - physic.ZeroCelsius) / float32(physic.Celsius)
+			}
+			writeString("  Temperature", line)
+			line++
+			writeString(fmt.Sprintf("%v", value_c), line)
 			line++
 
 			termbox.Flush()
