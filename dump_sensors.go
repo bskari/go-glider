@@ -6,6 +6,7 @@ import (
 	"github.com/bskari/go-glider/glider"
 	"github.com/bskari/go-lsm303"
 	"github.com/nsf/termbox-go"
+	"github.com/stianeikeland/go-rpio/v4"
 	"github.com/tarm/serial"
 	"math"
 	"math/rand"
@@ -44,22 +45,6 @@ func (reader dummyReader) Read(buffer []byte) (n int, err error) {
 	} else {
 		return 0, nil
 	}
-}
-
-type Degrees float32
-
-func min(a, b int16) int16 {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int16) int16 {
-	if a > b {
-		return a
-	}
-	return b
 }
 
 func dumpSensors() {
@@ -104,6 +89,19 @@ func dumpSensors() {
 	} else {
 		accelerometer = nil
 		magnetometer = nil
+	}
+
+	// Set up button
+	var buttonPin *rpio.Pin
+	if glider.IsPi() {
+		err := rpio.Open()
+		if err != nil {
+			panic(err)
+		}
+		response := rpio.Pin(24)
+		buttonPin = &response
+		buttonPin.Input()
+		buttonPin.PullUp()
 	}
 
 	// Set up display
@@ -230,12 +228,12 @@ loop:
 				yRaw = int16(-10 + rand.Intn(21))
 				zRaw = int16(-10 + rand.Intn(21))
 			}
-			xMinFlux = min16(xRaw, xMinFlux)
-			yMinFlux = min16(yRaw, yMinFlux)
-			zMinFlux = min16(zRaw, zMinFlux)
-			xMaxFlux = max16(xRaw, xMaxFlux)
-			yMaxFlux = max16(yRaw, yMaxFlux)
-			zMaxFlux = max16(zRaw, zMaxFlux)
+			xMinFlux = min(xRaw, xMinFlux)
+			yMinFlux = min(yRaw, yMinFlux)
+			zMinFlux = min(zRaw, zMinFlux)
+			xMaxFlux = max(xRaw, xMaxFlux)
+			yMaxFlux = max(yRaw, yMaxFlux)
+			zMaxFlux = max(zRaw, zMaxFlux)
 			writeString("  Magnetometer", line)
 			line++
 			writeString(fmt.Sprintf("x: %v, min: %v, max: %v", xRaw, xMinFlux, xMaxFlux), line)
@@ -243,6 +241,18 @@ loop:
 			writeString(fmt.Sprintf("y: %v, min: %v, max: %v", yRaw, yMinFlux, yMaxFlux), line)
 			line++
 			writeString(fmt.Sprintf("z: %v, min: %v, max: %v", zRaw, zMinFlux, zMaxFlux), line)
+			line++
+
+			// Output button state
+			var buttonState rpio.State
+			if buttonPin != nil {
+				buttonState = buttonPin.Read()
+			} else {
+				buttonState = rpio.High
+			}
+			writeString("  Button", line)
+			line++
+			writeString(fmt.Sprintf("%v", buttonState), line)
 			line++
 
 			termbox.Flush()
@@ -257,14 +267,14 @@ func writeString(str string, y int) {
 	}
 }
 
-func min16(a, b int16) int16 {
+func min(a, b int16) int16 {
 	if a < b {
 		return a
 	}
 	return b
 }
 
-func max16(a, b int16) int16 {
+func max(a, b int16) int16 {
 	if a > b {
 		return a
 	}
