@@ -78,6 +78,7 @@ func dumpSensors() {
 
 	// Set up accelerometer and magnetometer
 	var accelerometer *lsm303.Accelerometer
+	var magnetometer *lsm303.Magnetometer
 	if glider.IsPi() {
 		// Make sure periph is initialized.
 		if _, err := host.Init(); err != nil {
@@ -91,12 +92,18 @@ func dumpSensors() {
 		}
 		defer bus.Close()
 
-		accelerometer, err = lsm303.NewAccelerometer(bus, &lsm303.DefaultOpts)
+		accelerometer, err = lsm303.NewAccelerometer(bus, &lsm303.DefaultAccelerometerOpts)
+		if err != nil {
+			panic(err)
+		}
+
+		magnetometer, err = lsm303.NewMagnetometer(bus, &lsm303.DefaultMagnetometerOpts)
 		if err != nil {
 			panic(err)
 		}
 	} else {
 		accelerometer = nil
+		magnetometer = nil
 	}
 
 	// Set up display
@@ -120,12 +127,18 @@ func dumpSensors() {
 	xMaxMps := -math.MaxFloat64
 	yMaxMps := -math.MaxFloat64
 	zMaxMps := -math.MaxFloat64
-	xMinRaw := int16(math.MaxInt16)
-	yMinRaw := int16(math.MaxInt16)
-	zMinRaw := int16(math.MaxInt16)
-	xMaxRaw := int16(-math.MaxInt16)
-	yMaxRaw := int16(-math.MaxInt16)
-	zMaxRaw := int16(-math.MaxInt16)
+	xMinAccelerometerRaw := int16(math.MaxInt16)
+	yMinAccelerometerRaw := int16(math.MaxInt16)
+	zMinAccelerometerRaw := int16(math.MaxInt16)
+	xMaxAccelerometerRaw := int16(-math.MaxInt16)
+	yMaxAccelerometerRaw := int16(-math.MaxInt16)
+	zMaxAccelerometerRaw := int16(-math.MaxInt16)
+	xMinFlux := int16(math.MaxInt16)
+	yMinFlux := int16(math.MaxInt16)
+	zMinFlux := int16(math.MaxInt16)
+	xMaxFlux := int16(math.MinInt16)
+	yMaxFlux := int16(math.MinInt16)
+	zMaxFlux := int16(math.MinInt16)
 
 loop:
 	for {
@@ -150,6 +163,8 @@ loop:
 
 			// Output the NMEA sentences
 			line := 0
+			writeString("  GPS", line)
+			line++
 			gpsTypes := make([]string, 0, len(gpsMessageTypeToMessage))
 			for type_ := range gpsMessageTypeToMessage {
 				gpsTypes = append(gpsTypes, type_)
@@ -185,6 +200,8 @@ loop:
 			xMaxMps = math.Max(xMps, xMaxMps)
 			yMaxMps = math.Max(yMps, yMaxMps)
 			zMaxMps = math.Max(zMps, zMaxMps)
+			writeString("  Accelerometer", line)
+			line++
 			writeString(fmt.Sprintf("x mps: %6.3f, min: %6.3f, max: %6.3f", xMps, xMinMps, xMaxMps), line)
 			line++
 			writeString(fmt.Sprintf("y mps: %6.3f, min: %6.3f, max: %6.3f", yMps, yMinMps, yMaxMps), line)
@@ -192,17 +209,40 @@ loop:
 			writeString(fmt.Sprintf("z mps: %6.3f, min: %6.3f, max: %6.3f", zMps, zMinMps, zMaxMps), line)
 			line++
 
-			xMinRaw = min(xRaw, xMinRaw)
-			yMinRaw = min(yRaw, yMinRaw)
-			zMinRaw = min(zRaw, zMinRaw)
-			xMaxRaw = max(xRaw, xMaxRaw)
-			yMaxRaw = max(yRaw, yMaxRaw)
-			zMaxRaw = max(zRaw, zMaxRaw)
-			writeString(fmt.Sprintf("x raw: %4d, min: %4d, max: %4d", xRaw, xMinRaw, xMaxRaw), line)
+			xMinAccelerometerRaw = min(xRaw, xMinAccelerometerRaw)
+			yMinAccelerometerRaw = min(yRaw, yMinAccelerometerRaw)
+			zMinAccelerometerRaw = min(zRaw, zMinAccelerometerRaw)
+			xMaxAccelerometerRaw = max(xRaw, xMaxAccelerometerRaw)
+			yMaxAccelerometerRaw = max(yRaw, yMaxAccelerometerRaw)
+			zMaxAccelerometerRaw = max(zRaw, zMaxAccelerometerRaw)
+			writeString(fmt.Sprintf("x raw: %4d, min: %4d, max: %4d", xRaw, xMinAccelerometerRaw, xMaxAccelerometerRaw), line)
 			line++
-			writeString(fmt.Sprintf("y raw: %4d, min: %4d, max: %4d", yRaw, yMinRaw, yMaxRaw), line)
+			writeString(fmt.Sprintf("y raw: %4d, min: %4d, max: %4d", yRaw, yMinAccelerometerRaw, yMaxAccelerometerRaw), line)
 			line++
-			writeString(fmt.Sprintf("z raw: %4d, min: %4d, max: %4d", zRaw, zMinRaw, zMaxRaw), line)
+			writeString(fmt.Sprintf("z raw: %4d, min: %4d, max: %4d", zRaw, zMinAccelerometerRaw, zMaxAccelerometerRaw), line)
+			line++
+
+			// Output magnetometer readings
+			if magnetometer != nil {
+				xRaw, yRaw, zRaw = magnetometer.SenseRaw()
+			} else {
+				xRaw = int16(-10 + rand.Intn(21))
+				yRaw = int16(-10 + rand.Intn(21))
+				zRaw = int16(-10 + rand.Intn(21))
+			}
+			xMinFlux = min16(xRaw, xMinFlux)
+			yMinFlux = min16(yRaw, yMinFlux)
+			zMinFlux = min16(zRaw, zMinFlux)
+			xMaxFlux = max16(xRaw, xMaxFlux)
+			yMaxFlux = max16(yRaw, yMaxFlux)
+			zMaxFlux = max16(zRaw, zMaxFlux)
+			writeString("  Magnetometer", line)
+			line++
+			writeString(fmt.Sprintf("x: %v, min: %v, max: %v", xRaw, xMinFlux, xMaxFlux), line)
+			line++
+			writeString(fmt.Sprintf("y: %v, min: %v, max: %v", yRaw, yMinFlux, yMaxFlux), line)
+			line++
+			writeString(fmt.Sprintf("z: %v, min: %v, max: %v", zRaw, zMinFlux, zMaxFlux), line)
 			line++
 
 			termbox.Flush()
@@ -215,4 +255,18 @@ func writeString(str string, y int) {
 	for x := 0; x < len(str); x++ {
 		termbox.SetCell(x, y, rune(str[x]), termbox.ColorWhite, termbox.ColorBlack)
 	}
+}
+
+func min16(a, b int16) int16 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func max16(a, b int16) int16 {
+	if a > b {
+		return a
+	}
+	return b
 }
