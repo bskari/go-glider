@@ -4,10 +4,10 @@ package glider
 import (
 	"github.com/stianeikeland/go-rpio/v4"
 	"time"
-	"github.com/op/go-logging"
 )
 
-func Glide(logger *logging.Logger) {
+func Glide() {
+	logger := GetLogger()
 	if !IsPi() {
 		logger.Error("Can't glide on non-Pi hardware")
 		return
@@ -29,5 +29,9 @@ func Glide(logger *logging.Logger) {
 	for i := 0; i < 100; i++ {
 		ToggleLed()
 		time.Sleep(time.Millisecond * 250)
+		if buttonPin.Read() == rpio.Low {
+			logger.Info("Button pressed")
+			break
+		}
 	}
 }
