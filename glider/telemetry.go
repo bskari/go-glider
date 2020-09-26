@@ -48,8 +48,9 @@ type Axes struct {
 }
 
 type Telemetry struct {
-	previousPoint Point
-	lastMps       float32
+	HasGpsLock    bool
+	recentPoint   Point
+	recentMps     float32
 	gps           *bufio.Reader
 	accelerometer *lsm303.Accelerometer
 	magnetometer  *lsm303.Magnetometer
@@ -92,11 +93,12 @@ func NewTelemetry() (*Telemetry, error) {
 		}
 	}
 	return &Telemetry{
-		previousPoint: Point{Latitude: 40.0, Longitude: -105.2, Altitude: 1655},
-		lastMps:       0.0,
+		recentPoint:   Point{Latitude: 40.0, Longitude: -105.2, Altitude: 1655},
+		recentMps:     0.0,
 		gps:           gps,
 		accelerometer: accelerometer,
 		magnetometer:  magnetometer,
+		HasGpsLock:    false,
 	}, nil
 }
 
@@ -128,15 +130,22 @@ func (telemetry *Telemetry) GetAxes() (Axes, error) {
 	}, nil
 }
 
-func (telemetry *Telemetry) GetPosition() (Point, error) {
+// Parse any waiting GPS messages. Users need not call this, but may.
+func (telemetry *Telemetry) ParseMessages() error {
 	line, err := telemetry.gps.ReadString('\n')
 	if err != nil {
-		return telemetry.previousPoint, err
+		return err
 	}
 	if line != "" {
 		telemetry.parseSentence(line)
 	}
-	return telemetry.previousPoint, nil
+	return nil
+}
+
+func (telemetry *Telemetry) GetPosition() Point {
+	// TODO: Do some forward projection or Kalman filtering
+	telemetry.ParseMessages()
+	return telemetry.recentPoint
 }
 
 func (telemetry *Telemetry) GetTimestamp() int64 {
@@ -160,8 +169,9 @@ func (telemetry *Telemetry) parseSentence(sentence string) {
 			return
 		}
 		message := parsed.(nmea.RMC)
-		telemetry.previousPoint.Latitude = message.Latitude
-		telemetry.previousPoint.Longitude = message.Longitude
+		telemetry.HasGpsLock = (message.Validity == nmea.ValidRMC)
+		telemetry.recentPoint.Latitude = message.Latitude
+		telemetry.recentPoint.Longitude = message.Longitude
 		if telemetry.timestamp == 0 {
 			t := time.Date(
 				message.Date.YY+2000,
@@ -182,9 +192,9 @@ func (telemetry *Telemetry) parseSentence(sentence string) {
 			return
 		}
 		message := parsed.(nmea.GGA)
-		telemetry.previousPoint.Latitude = message.Latitude
-		telemetry.previousPoint.Longitude = message.Longitude
-		telemetry.previousPoint.Altitude = float32(message.Altitude)
+		telemetry.recentPoint.Latitude = message.Latitude
+		telemetry.recentPoint.Longitude = message.Longitude
+		telemetry.recentPoint.Altitude = float32(message.Altitude)
 	} else if strings.HasPrefix(sentence, "$GPVTG") {
 		parsed, err := nmea.Parse(sentence)
 		if err != nil {
@@ -192,6 +202,6 @@ func (telemetry *Telemetry) parseSentence(sentence string) {
 			return
 		}
 		message := parsed.(nmea.VTG)
-		telemetry.lastMps = float32(message.GroundSpeedKPH * 1000.0 / 3600.0)
+		telemetry.recentMps = float32(message.GroundSpeedKPH * 1000.0 / 3600.0)
 	}
 }

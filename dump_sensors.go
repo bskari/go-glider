@@ -138,8 +138,23 @@ func dumpSensors() {
 	yMaxFlux := int16(math.MinInt16)
 	zMaxFlux := int16(math.MinInt16)
 
+	// Let's also test out the LED status indicator
+	statusIndicator := glider.NewLedStatusIndicator(3)
+	blinkCount := uint8(3)
+
 loop:
 	for {
+		// The LED needs to update more often than the termbox
+		for i := 0; i < 5; i++ {
+			if statusIndicator.BlinkState(blinkCount) {
+				blinkCount--
+				if blinkCount == 0 {
+					blinkCount = 3
+				}
+			}
+			time.Sleep(time.Millisecond * 50)
+		}
+
 		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
 		select {
@@ -261,7 +276,13 @@ loop:
 			}
 			writeString("  Button", line)
 			line++
-			writeString(fmt.Sprintf("%v", buttonState), line)
+			buttonStateString := "unknown"
+			if buttonState == rpio.High {
+				buttonStateString = "high"
+			} else if buttonState == rpio.Low {
+				buttonStateString = "low"
+			}
+			writeString(fmt.Sprintf("%v", buttonStateString), line)
 			line++
 
 			// Output temperature
@@ -279,7 +300,6 @@ loop:
 			line++
 
 			termbox.Flush()
-			time.Sleep(time.Millisecond * 250)
 		}
 	}
 }

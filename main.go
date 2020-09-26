@@ -4,19 +4,24 @@ import (
 	"flag"
 	"fmt"
 	"github.com/bskari/go-glider/glider"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
-	"io/ioutil"
 )
 
 func main() {
+	if os.Getuid() != 0 {
+		fmt.Print("Must run as root")
+		return
+	}
+
 	dumpSensorsPtr := flag.Bool("dump", false, "Dump the sensor data")
 	glidePtr := flag.Bool("glide", false, "Run the glide test")
 	flag.Parse()
 
-	os.mkdir("logs", 0644)
+	os.Mkdir("logs", 0644)
 
 	if *dumpSensorsPtr {
 		dumpSensors()
@@ -75,8 +80,12 @@ func runGlide() {
 	}
 	defer fileLog.Close()
 	glider.ConfigureLogger(fileLog)
-	glider.GetLogger().Info("Calling Glide")
-	glider.Glide()
+	glider.GetLogger().Info("Starting Pilot")
+	pilot, err := glider.NewPilot()
+	if err != nil {
+		glider.GetLogger().Errorf("Couldn't create Pilot: %v", err)
+	}
+	pilot.RunGlideTestForever()
 }
 
 func getLogName(timeSet bool) string {
