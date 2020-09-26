@@ -1,12 +1,12 @@
 package glider
 
 import (
-	"time"
 	"fmt"
 	"os"
+	"time"
 )
 
-func ConfigureLogger(file* os.File) {
+func ConfigureLogger(file *os.File) {
 	fileLog = file
 }
 

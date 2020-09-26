@@ -3,12 +3,12 @@ package glider
 import (
 	"bufio"
 	"github.com/adrianmo/go-nmea"
-	"github.com/tarm/serial"
 	"github.com/bskari/go-lsm303"
+	"github.com/tarm/serial"
 	"log"
 	"math"
-	"periph.io/x/periph/host"
 	"periph.io/x/periph/conn/i2c/i2creg"
+	"periph.io/x/periph/host"
 	"strings"
 	"time"
 )
@@ -30,6 +30,7 @@ const DECLINATION_D = 8.1
 
 type Degrees = float32
 type Meters = float32
+
 // Coordinate is separate from Degreees because I want to use float64 fo
 // extra precision, but it's overkill for other things
 type Coordinate = float64
@@ -42,8 +43,8 @@ type Point struct {
 
 type Axes struct {
 	Pitch Degrees
-	Roll Degrees
-	Yaw Degrees
+	Roll  Degrees
+	Yaw   Degrees
 }
 
 type Telemetry struct {
@@ -95,7 +96,7 @@ func NewTelemetry() (*Telemetry, error) {
 		lastMps:       0.0,
 		gps:           gps,
 		accelerometer: accelerometer,
-		magnetometer: magnetometer,
+		magnetometer:  magnetometer,
 	}, nil
 }
 
@@ -121,9 +122,9 @@ func (telemetry *Telemetry) GetAxes() (Axes, error) {
 	// The roll calculation assumes that -x is forward, +y is right, and
 	// +z is down
 	return Axes{
-		Pitch: Degrees(math.Atan2(float64(xRawA), math.Sqrt(float64(y2 + z2)))),
-		Roll: Degrees(math.Atan2(float64(yRawA), float64(zRawA))),
-		Yaw: Degrees(math.Atan2(float64(yRawM), float64(xRawM))),
+		Pitch: Degrees(math.Atan2(float64(xRawA), math.Sqrt(float64(y2+z2)))),
+		Roll:  Degrees(math.Atan2(float64(yRawA), float64(zRawA))),
+		Yaw:   Degrees(math.Atan2(float64(yRawM), float64(xRawM))),
 	}, nil
 }
 
@@ -163,7 +164,7 @@ func (telemetry *Telemetry) parseSentence(sentence string) {
 		telemetry.previousPoint.Longitude = message.Longitude
 		if telemetry.timestamp == 0 {
 			t := time.Date(
-				message.Date.YY + 2000,
+				message.Date.YY+2000,
 				time.Month(message.Date.MM),
 				message.Date.DD,
 				message.Time.Hour,

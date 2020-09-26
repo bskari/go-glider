@@ -35,6 +35,7 @@ func skipIfNotPi(t *testing.T) {
 
 var previousLed bool
 var ledEnabled = false
+
 func ToggleLed() error {
 	if !ledEnabled {
 		err := ioutil.WriteFile("/sys/class/leds/led0/trigger", []byte("gpio"), 0644)
