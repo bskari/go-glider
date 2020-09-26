@@ -34,6 +34,7 @@ type Meters = float32
 // Coordinate is separate from Degreees because I want to use float64 fo
 // extra precision, but it's overkill for other things
 type Coordinate = float64
+type MetersPerSecond = float64
 
 type Point struct {
 	Latitude  Coordinate
@@ -50,7 +51,7 @@ type Axes struct {
 type Telemetry struct {
 	HasGpsLock    bool
 	recentPoint   Point
-	recentMps     float32
+	recentSpeed   MetersPerSecond
 	gps           *bufio.Reader
 	accelerometer *lsm303.Accelerometer
 	magnetometer  *lsm303.Magnetometer
@@ -94,7 +95,7 @@ func NewTelemetry() (*Telemetry, error) {
 	}
 	return &Telemetry{
 		recentPoint:   Point{Latitude: 40.0, Longitude: -105.2, Altitude: 1655},
-		recentMps:     0.0,
+		recentSpeed:   0.0,
 		gps:           gps,
 		accelerometer: accelerometer,
 		magnetometer:  magnetometer,
@@ -131,25 +132,35 @@ func (telemetry *Telemetry) GetAxes() (Axes, error) {
 }
 
 // Parse any waiting GPS messages. Users need not call this, but may.
-func (telemetry *Telemetry) ParseMessages() error {
+func (telemetry *Telemetry) ParseQueuedMessage() (bool, error) {
+	parsed := false
 	line, err := telemetry.gps.ReadString('\n')
 	if err != nil {
-		return err
+		return false, err
 	}
 	if line != "" {
+		Logger.Debug(strings.TrimSpace(line))
 		telemetry.parseSentence(line)
+		parsed = true
 	}
-	return nil
+	return parsed, nil
 }
 
 func (telemetry *Telemetry) GetPosition() Point {
+	_, err := telemetry.ParseQueuedMessage()
+	if err != nil {
+		Logger.Errorf("Unable to parse GPS message: %v", err)
+	}
 	// TODO: Do some forward projection or Kalman filtering
-	telemetry.ParseMessages()
 	return telemetry.recentPoint
 }
 
 func (telemetry *Telemetry) GetTimestamp() int64 {
 	return telemetry.timestamp
+}
+
+func (telemetry *Telemetry) GetSpeed() MetersPerSecond {
+	return telemetry.recentSpeed
 }
 
 func (telemetry *Telemetry) parseSentence(sentence string) {
@@ -202,6 +213,6 @@ func (telemetry *Telemetry) parseSentence(sentence string) {
 			return
 		}
 		message := parsed.(nmea.VTG)
-		telemetry.recentMps = float32(message.GroundSpeedKPH * 1000.0 / 3600.0)
+		telemetry.recentSpeed = MetersPerSecond(message.GroundSpeedKPH * 1000.0 / 3600.0)
 	}
 }

@@ -48,22 +48,26 @@ func runGlide() {
 
 	// Wait for the GPS to get a lock, so we can set the clock
 	timeSet := false
-	fmt.Println("Waiting for timestamp from GPS")
+	glider.Logger.Info("Waiting for timestamp from GPS")
 	for i := 0; i < 10; i++ {
 		time.Sleep(time.Millisecond * 100)
 		glider.ToggleLed()
 		time.Sleep(time.Millisecond * 900)
 		glider.ToggleLed()
-		// Parse any queued up messages
-		for j := 0; j < 10; j++ {
-			telemetry.GetPosition()
+		// Parse a queued up message
+		parsed, err := telemetry.ParseQueuedMessage()
+		if err != nil {
+			glider.Logger.Errorf("Unable to parse GPS message: %v", err)
+			break
 		}
 		if telemetry.GetTimestamp() != 0 {
 			break
 		}
 	}
-	if telemetry.GetTimestamp() != 0 {
-		command := exec.Command("date", "+%s", "-s", fmt.Sprintf("@%v", telemetry.GetTimestamp()))
+	timestamp := telemetry.GetTimestamp()
+	if timestamp != 0 {
+		fmt.Printf("Setting timestap to %v\n", timestamp)
+		command := exec.Command("date", "+%s", "-s", fmt.Sprintf("@%v", timestamp))
 		err := command.Run()
 		if err != nil {
 			fmt.Printf("Unable to set time: %v\n", err)
@@ -80,10 +84,10 @@ func runGlide() {
 	}
 	defer fileLog.Close()
 	glider.ConfigureLogger(fileLog)
-	glider.GetLogger().Info("Starting Pilot")
+	glider.Logger.Info("Starting Pilot")
 	pilot, err := glider.NewPilot()
 	if err != nil {
-		glider.GetLogger().Errorf("Couldn't create Pilot: %v", err)
+		glider.Logger.Errorf("Couldn't create Pilot: %v", err)
 	}
 	pilot.RunGlideTestForever()
 }
