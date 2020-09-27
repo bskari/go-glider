@@ -184,7 +184,7 @@ loop:
 			}
 			sort.Strings(gpsTypes)
 			for _, type_ := range gpsTypes {
-				writer.WriteLine(gpsMessageTypeToMessage[type_])
+				writer.IndentLine(gpsMessageTypeToMessage[type_])
 			}
 
 			// Output accelerometer readings
@@ -227,9 +227,9 @@ loop:
 			zMaxMps = math.Max(zMps, zMaxMps)
 
 			writer.WriteLine("=== Accelerometer ===")
-			writer.WriteLine(fmt.Sprintf("x mps: %6.3f, min: %6.3f, max: %6.3f", xMps, xMinMps, xMaxMps))
-			writer.WriteLine(fmt.Sprintf("y mps: %6.3f, min: %6.3f, max: %6.3f", yMps, yMinMps, yMaxMps))
-			writer.WriteLine(fmt.Sprintf("z mps: %6.3f, min: %6.3f, max: %6.3f", zMps, zMinMps, zMaxMps))
+			writer.IndentLine(fmt.Sprintf("x mps: %6.3f, min: %6.3f, max: %6.3f", xMps, xMinMps, xMaxMps))
+			writer.IndentLine(fmt.Sprintf("y mps: %6.3f, min: %6.3f, max: %6.3f", yMps, yMinMps, yMaxMps))
+			writer.IndentLine(fmt.Sprintf("z mps: %6.3f, min: %6.3f, max: %6.3f", zMps, zMinMps, zMaxMps))
 
 			xMinAccelerometerRaw = min(xRawA, xMinAccelerometerRaw)
 			yMinAccelerometerRaw = min(yRawA, yMinAccelerometerRaw)
@@ -237,11 +237,11 @@ loop:
 			xMaxAccelerometerRaw = max(xRawA, xMaxAccelerometerRaw)
 			yMaxAccelerometerRaw = max(yRawA, yMaxAccelerometerRaw)
 			zMaxAccelerometerRaw = max(zRawA, zMaxAccelerometerRaw)
-			writer.WriteLine(fmt.Sprintf("x raw: %4d, min: %4d, max: %4d", xRawA, xMinAccelerometerRaw, xMaxAccelerometerRaw))
-			writer.WriteLine(fmt.Sprintf("y raw: %4d, min: %4d, max: %4d", yRawA, yMinAccelerometerRaw, yMaxAccelerometerRaw))
-			writer.WriteLine(fmt.Sprintf("z raw: %4d, min: %4d, max: %4d", zRawA, zMinAccelerometerRaw, zMaxAccelerometerRaw))
+			writer.IndentLine(fmt.Sprintf("x raw: %4d, min: %4d, max: %4d", xRawA, xMinAccelerometerRaw, xMaxAccelerometerRaw))
+			writer.IndentLine(fmt.Sprintf("y raw: %4d, min: %4d, max: %4d", yRawA, yMinAccelerometerRaw, yMaxAccelerometerRaw))
+			writer.IndentLine(fmt.Sprintf("z raw: %4d, min: %4d, max: %4d", zRawA, zMinAccelerometerRaw, zMaxAccelerometerRaw))
 
-			writer.WriteLine(fmt.Sprintf("pitch: %5.1f   roll: %5.1f", pitch_d, roll_d))
+			writer.IndentLine(fmt.Sprintf("pitch: %5.1f   roll: %5.1f", pitch_d, roll_d))
 
 			// Output magnetometer readings
 			var xRawM, yRawM, zRawM int16
@@ -266,10 +266,10 @@ loop:
 			yHorizontal := float64(yRawM)*math.Cos(roll_r) + float64(zRawM)*math.Sin(roll_r)
 
 			writer.WriteLine("=== Magnetometer ===")
-			writer.WriteLine(fmt.Sprintf("x: %v, min: %v, max: %v", xRawM, xMinFlux, xMaxFlux))
-			writer.WriteLine(fmt.Sprintf("y: %v, min: %v, max: %v", yRawM, yMinFlux, yMaxFlux))
-			writer.WriteLine(fmt.Sprintf("z: %v, min: %v, max: %v", zRawM, zMinFlux, zMaxFlux))
-			writer.WriteLine(fmt.Sprintf("heading: %v", glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))))
+			writer.IndentLine(fmt.Sprintf("x: %v, min: %v, max: %v", xRawM, xMinFlux, xMaxFlux))
+			writer.IndentLine(fmt.Sprintf("y: %v, min: %v, max: %v", yRawM, yMinFlux, yMaxFlux))
+			writer.IndentLine(fmt.Sprintf("z: %v, min: %v, max: %v", zRawM, zMinFlux, zMaxFlux))
+			writer.IndentLine(fmt.Sprintf("heading: %v", glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))))
 
 			// Output button state
 			var buttonState rpio.State
@@ -285,7 +285,7 @@ loop:
 			} else if buttonState == rpio.Low {
 				buttonStateString = "low"
 			}
-			writer.WriteLine(fmt.Sprintf("%v", buttonStateString))
+			writer.IndentLine(fmt.Sprintf("%v", buttonStateString))
 
 			// Output temperature
 			var value_c float32
@@ -297,7 +297,7 @@ loop:
 				value_c = float32(temperature-physic.ZeroCelsius) / float32(physic.Celsius)
 			}
 			writer.WriteLine("=== Temperature ===")
-			writer.WriteLine(fmt.Sprintf("%v", value_c))
+			writer.IndentLine(fmt.Sprintf("%v", value_c))
 
 			termbox.Flush()
 		}
@@ -310,6 +310,12 @@ type StringWriter struct {
 func (writer *StringWriter) WriteLine(str string) {
 	for x := 0; x < len(str); x++ {
 		termbox.SetCell(x, writer.Line, rune(str[x]), termbox.ColorWhite, termbox.ColorBlack)
+	}
+	writer.Line++
+}
+func (writer *StringWriter) IndentLine(str string) {
+	for x := 0; x < len(str); x++ {
+		termbox.SetCell(x + 3, writer.Line, rune(str[x]), termbox.ColorWhite, termbox.ColorBlack)
 	}
 	writer.Line++
 }

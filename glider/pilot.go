@@ -19,7 +19,7 @@ type Pilot struct {
 	state           PilotState
 	telemetry       *Telemetry
 	control         *Control
-	statusIndicator LedStatusIndicator
+	statusIndicator *LedStatusIndicator
 	buttonPin       *rpio.Pin
 	buttonPressTime time.Time
 	zeroSpeedTime   *time.Time
