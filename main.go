@@ -21,7 +21,7 @@ func main() {
 	glidePtr := flag.Bool("glide", false, "Run the glide test")
 	flag.Parse()
 
-	os.Mkdir("logs", 0644)
+	os.Mkdir("logs", 0655)
 
 	if *dumpSensorsPtr {
 		dumpSensors()
@@ -55,7 +55,7 @@ func runGlide() {
 		time.Sleep(time.Millisecond * 900)
 		glider.ToggleLed()
 		// Parse a queued up message
-		parsed, err := telemetry.ParseQueuedMessage()
+		_, err := telemetry.ParseQueuedMessage()
 		if err != nil {
 			glider.Logger.Errorf("Unable to parse GPS message: %v", err)
 			break
@@ -66,7 +66,10 @@ func runGlide() {
 	}
 	timestamp := telemetry.GetTimestamp()
 	if timestamp != 0 {
-		fmt.Printf("Setting timestap to %v\n", timestamp)
+		now := time.Unix(timestamp, 0)
+		formatted := now.Format("Jan 2 15:04:05 -0700 MST")
+		fmt.Printf("Setting timestamp to %v (%v)\n", timestamp, formatted)
+		fmt.Printf("Running `date +%%s -s @%v\n", fmt.Sprintf("@%v", timestamp))
 		command := exec.Command("date", "+%s", "-s", fmt.Sprintf("@%v", timestamp))
 		err := command.Run()
 		if err != nil {

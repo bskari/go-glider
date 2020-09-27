@@ -5,6 +5,7 @@ go 1.11
 require (
 	github.com/adrianmo/go-nmea v1.3.0
 	github.com/bskari/go-lsm303 v0.0.0-20200920073524-2550c70a128f
+	github.com/fatih/color v1.9.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect

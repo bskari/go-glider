@@ -60,7 +60,7 @@ func NewPilot() (*Pilot, error) {
 
 // Run the local glide test, e.g. when throwing the plane down a hill
 func (pilot *Pilot) RunGlideTestForever() {
-	Logger.Debug("Waiting for GPS lock")
+	Logger.Info("Waiting for GPS lock")
 	for {
 		pilot.statusIndicator.BlinkState(uint8(pilot.state))
 

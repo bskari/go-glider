@@ -2,6 +2,7 @@ package glider
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"os"
 	"time"
 )
@@ -11,10 +12,19 @@ func ConfigureLogger(file *os.File) {
 }
 
 type MultiLogger struct {
+	warningColor *color.Color
+	errorColor   *color.Color
 }
 
 var fileLog *os.File
-var Logger = &MultiLogger{}
+var Logger = newLogger()
+
+func newLogger() MultiLogger {
+	return MultiLogger{
+		errorColor:   color.New(color.FgRed),
+		warningColor: color.New(color.FgYellow),
+	}
+}
 
 func getFileFormatString(level string) string {
 	now := time.Now()
@@ -26,7 +36,7 @@ func (*MultiLogger) Debug(msg string) {
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
-	fmt.Printf(format, msg)
+	//fmt.Printf(format, msg)
 }
 func (*MultiLogger) Debugf(msg string, args ...interface{}) {
 	format := getFileFormatString("DEBU")
@@ -34,7 +44,7 @@ func (*MultiLogger) Debugf(msg string, args ...interface{}) {
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
-	fmt.Printf(format, newMsg)
+	//fmt.Printf(format, newMsg)
 }
 func (*MultiLogger) Info(msg string) {
 	format := getFileFormatString("INFO")
@@ -51,63 +61,48 @@ func (*MultiLogger) Infof(msg string, args ...interface{}) {
 	}
 	fmt.Printf(format, newMsg)
 }
-func (*MultiLogger) Notice(msg string) {
-	format := getFileFormatString("NOTI")
-	if fileLog != nil {
-		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
-	}
-	fmt.Printf(format, msg)
-}
-func (*MultiLogger) Noticef(msg string, args ...interface{}) {
-	format := getFileFormatString("NOTI")
-	newMsg := fmt.Sprintf(msg, args...)
-	if fileLog != nil {
-		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
-	}
-	fmt.Printf(format, newMsg)
-}
-func (*MultiLogger) Warning(msg string) {
+func (logger *MultiLogger) Warning(msg string) {
 	format := getFileFormatString("WARN")
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
-	fmt.Printf(format, msg)
+	logger.warningColor.Printf(format, msg)
 }
-func (*MultiLogger) Warningf(msg string, args ...interface{}) {
+func (logger *MultiLogger) Warningf(msg string, args ...interface{}) {
 	format := getFileFormatString("WARN")
 	newMsg := fmt.Sprintf(msg, args...)
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
-	fmt.Printf(format, newMsg)
+	logger.warningColor.Printf(format, newMsg)
 }
-func (*MultiLogger) Error(msg string) {
+func (logger *MultiLogger) Error(msg string) {
 	format := getFileFormatString("ERRO")
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
-	fmt.Printf(format, msg)
+	logger.errorColor.Printf(format, msg)
 }
-func (*MultiLogger) Errorf(msg string, args ...interface{}) {
+func (logger *MultiLogger) Errorf(msg string, args ...interface{}) {
 	format := getFileFormatString("ERRO")
 	newMsg := fmt.Sprintf(msg, args...)
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
-	fmt.Printf(format, newMsg)
+	logger.errorColor.Printf(format, newMsg)
 }
-func (*MultiLogger) Critical(msg string) {
+func (logger *MultiLogger) Critical(msg string) {
 	format := getFileFormatString("CRIT")
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
-	fmt.Printf(format, msg)
+	logger.errorColor.Printf(format, msg)
 }
-func (*MultiLogger) Criticalf(msg string, args ...interface{}) {
+func (logger *MultiLogger) Criticalf(msg string, args ...interface{}) {
 	format := getFileFormatString("CRIT")
 	newMsg := fmt.Sprintf(msg, args...)
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
-	fmt.Printf(format, newMsg)
+	logger.errorColor.Printf(format, newMsg)
 }
