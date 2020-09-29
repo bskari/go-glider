@@ -313,6 +313,7 @@ loop:
 type StringWriter struct {
 	Line int
 }
+
 func (writer *StringWriter) WriteLine(str string) {
 	for x := 0; x < len(str); x++ {
 		termbox.SetCell(x, writer.Line, rune(str[x]), termbox.ColorWhite, termbox.ColorBlack)
@@ -321,7 +322,7 @@ func (writer *StringWriter) WriteLine(str string) {
 }
 func (writer *StringWriter) IndentLine(str string) {
 	for x := 0; x < len(str); x++ {
-		termbox.SetCell(x + 3, writer.Line, rune(str[x]), termbox.ColorWhite, termbox.ColorBlack)
+		termbox.SetCell(x+3, writer.Line, rune(str[x]), termbox.ColorWhite, termbox.ColorBlack)
 	}
 	writer.Line++
 }

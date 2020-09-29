@@ -12,6 +12,8 @@ github.com/bskari/go-lsm303 v0.0.0-20200920053145-109badcb94cc h1:6z6wd0KDxu4SOy
 github.com/bskari/go-lsm303 v0.0.0-20200920053145-109badcb94cc/go.mod h1:cvdWdlvLMIV3OHO8GpARFsGW1QjModgHCUpTFXmFULQ=
 github.com/bskari/go-lsm303 v0.0.0-20200920073524-2550c70a128f h1:A/1jXTp3vYPyczTlFqS6rab6fnMQ7PDvmPgIjtkfc1k=
 github.com/bskari/go-lsm303 v0.0.0-20200920073524-2550c70a128f/go.mod h1:cvdWdlvLMIV3OHO8GpARFsGW1QjModgHCUpTFXmFULQ=
+github.com/bskari/go-lsm303 v0.0.0-20200927082938-3432d22cb4f1 h1:BbpX1r9y7n7GvV80rDDGUo6sXuvzZ9b60oPK4xqvnQQ=
+github.com/bskari/go-lsm303 v0.0.0-20200927082938-3432d22cb4f1/go.mod h1:cvdWdlvLMIV3OHO8GpARFsGW1QjModgHCUpTFXmFULQ=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
@@ -61,6 +63,8 @@ golang.org/x/sys v0.0.0-20200918174421-af09f7315aff h1:1CPUrky56AcgSpxz/KfgzQWzf
 golang.org/x/sys v0.0.0-20200918174421-af09f7315aff/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200926100807-9d91bd62050c h1:38q6VNPWR010vN82/SB121GujZNIfAUb4YttE2rhGuc=
 golang.org/x/sys v0.0.0-20200926100807-9d91bd62050c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200929083018-4d22bbb62b3c h1:/h0vtH0PyU0xAoZJVcRw1k0Ng+U0JAy3QDiFmppIlIE=
+golang.org/x/sys v0.0.0-20200929083018-4d22bbb62b3c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b h1:QRR6H1YWRnHb4Y/HeNFCTJLFVxaq6wH4YuVdsUOr75U=

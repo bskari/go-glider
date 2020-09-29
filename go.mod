@@ -4,7 +4,7 @@ go 1.11
 
 require (
 	github.com/adrianmo/go-nmea v1.3.0
-	github.com/bskari/go-lsm303 v0.0.0-20200920073524-2550c70a128f
+	github.com/bskari/go-lsm303 v0.0.0-20200927082938-3432d22cb4f1
 	github.com/fatih/color v1.9.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
@@ -14,7 +14,7 @@ require (
 	github.com/stianeikeland/go-rpio/v4 v4.4.0
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
-	golang.org/x/sys v0.0.0-20200926100807-9d91bd62050c // indirect
+	golang.org/x/sys v0.0.0-20200929083018-4d22bbb62b3c // indirect
 	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
