@@ -144,6 +144,14 @@ func (statusIndicator *LedStatusIndicator) Reset() {
 	statusIndicator.until = time.Now().Add(statusIndicator.betweenSetsOfBlinks)
 }
 
-func ToDegrees(radians float32) Degrees {
+func ToDegrees(radians Radians) Degrees {
 	return radians * (180.0 / math.Pi)
+}
+
+func ToRadians(degrees Degrees) Radians {
+	return degrees * (math.Pi / 180.0)
+}
+
+func ToCoordinateRadians(coordinate Coordinate) float64 {
+	return coordinate * (math.Pi / 180.0)
 }

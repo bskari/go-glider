@@ -108,6 +108,7 @@ func (pilot *Pilot) runWaitingForButton() {
 	if buttonState == rpio.Low {
 		Logger.Info("Button pressed, waiting for launch")
 		pilot.state = waitingForLaunch
+		pilot.buttonPressTime = time.Now()
 	}
 }
 

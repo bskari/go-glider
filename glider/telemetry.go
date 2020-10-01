@@ -29,10 +29,11 @@ const MAGNETOMETER_Y_OFFSET_T = (MAGNETOMETER_Y_MAX_T + MAGNETOMETER_Y_MIN_T) * 
 const DECLINATION_D = 8.1
 
 type Degrees = float32
+type Radians = float32
 type Meters = float32
 
-// Coordinate is separate from Degreees because I want to use float64 fo
-// extra precision, but it's overkill for other things
+// Coordinate is separate from Degrees because I want to use float64 for extra
+// precision, but it's overkill for measuring angles
 type Coordinate = float64
 type MetersPerSecond = float64
 
@@ -184,7 +185,7 @@ func (telemetry *Telemetry) parseSentence(sentence string) {
 	if strings.HasPrefix(sentence, "$GPRMC") {
 		parsed, err := nmea.Parse(sentence)
 		if err != nil {
-			log.Printf("Failed to parse GPRMC message %v\n", sentence)
+			log.Printf("Failed to parse GPRMC message '%v': %v\n", sentence, err)
 			return
 		}
 		message := parsed.(nmea.RMC)
