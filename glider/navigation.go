@@ -98,6 +98,44 @@ func cachedEquirectangularBearing(start, end Point) Degrees {
 	return bearing
 }
 
+// Returns the course from p1 to p2
 func Course(p1, p2 Point) Degrees {
 	return cachedEquirectangularBearing(p1, p2)
+}
+
+type TurnDirection uint8
+
+const (
+	Left TurnDirection = iota
+	Right
+	Straight
+	UTurn
+)
+func (td TurnDirection) String() string {
+	return []string{"Left", "Right", "Straight", "UTurn"}[td]
+}
+
+// Returns the direction needed to turn to get from start to end
+func GetTurnDirection(bearing Degrees, start, end Point) TurnDirection {
+	// Based on https://stackoverflow.com/questions/3419341/how-to-calculate-turning-direction
+	x := cachedLongitudeDistance(start, end)
+	y := latitudeDistance(start.Latitude, end.Latitude)
+	// math.Sin expects radians to go anti-clockwise, so flip it
+	antiClockwise := 360 - bearing
+	// Rotate the vector (0, -10)
+	offsetX := float32(10 * math.Sin(float64(ToRadians(antiClockwise))))
+	offsetY := float32(-10 * math.Cos(float64(ToRadians(antiClockwise))))
+
+	crossProduct := y*offsetX - x*offsetY
+	if crossProduct < 0 {
+		return Left
+	}
+	if crossProduct > 0 {
+		return Right
+	}
+	dotProduct := y*offsetY + x*offsetX
+	if dotProduct > 0 {
+		return Straight
+	}
+	return UTurn
 }

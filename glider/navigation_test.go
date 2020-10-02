@@ -200,6 +200,95 @@ func TestBearingFormulas(t *testing.T) {
 	}
 }
 
+func TestGetTurnDirection(t *testing.T) {
+	// We can't really test Straight and UTurns because of float
+	// precision. It'll return Left or Right instead of Straight.
+	var direction TurnDirection
+
+	// 0 degrees right turns
+	direction = GetTurnDirection(0, Point{0, 0, 0}, Point{1, 1, 0})
+	if direction != Right {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(0, Point{0, 0, 0}, Point{-1, 1, 0})
+	if direction != Right {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(0, Point{0, 0, 0}, Point{0, 1, 0})
+	if direction != Right {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(0, Point{0, 0, 0}, Point{0, 1, 0})
+	if direction != Right {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	// 0 degrees left turns
+	direction = GetTurnDirection(0, Point{0, 0, 0}, Point{1, -1, 0})
+	if direction != Left {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(0, Point{0, 0, 0}, Point{0, -1, 0})
+	if direction != Left {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(0, Point{0, 0, 0}, Point{-1, -1, 0})
+	if direction != Left {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+
+	// Go towards up from different angles
+	direction = GetTurnDirection(179, Point{0, 0, 0}, Point{1, 0, 0})
+	if direction != Left {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(135, Point{0, 0, 0}, Point{1, 0, 0})
+	if direction != Left {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(90, Point{0, 0, 0}, Point{1, 0, 0})
+	if direction != Left {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(45, Point{0, 0, 0}, Point{1, 0, 0})
+	if direction != Left {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(30, Point{0, 0, 0}, Point{1, 0, 0})
+	if direction != Left {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(1, Point{0, 0, 0}, Point{1, 0, 0})
+	if direction != Left {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(181, Point{0, 0, 0}, Point{1, 0, 0})
+	if direction != Right {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(215, Point{0, 0, 0}, Point{1, 0, 0})
+	if direction != Right {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(270, Point{0, 0, 0}, Point{1, 0, 0})
+	if direction != Right {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(359, Point{0, 0, 0}, Point{1, 0, 0})
+	if direction != Right {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+
+	// Random tests
+	direction = GetTurnDirection(85, Point{1, 3, 0}, Point{2, -1, 0})
+	if direction != Left{
+		t.Errorf("Bad turn direction %v", direction)
+	}
+	direction = GetTurnDirection(180, Point{1, 3, 0}, Point{1, 2, 0})
+	if direction != Right {
+		t.Errorf("Bad turn direction %v", direction)
+	}
+}
+
 func BenchmarkHaversineDistance(b *testing.B) {
 	start := Point{
 		Latitude:  40.0,
