@@ -111,6 +111,7 @@ const (
 	Straight
 	UTurn
 )
+
 func (td TurnDirection) String() string {
 	return []string{"Left", "Right", "Straight", "UTurn"}[td]
 }

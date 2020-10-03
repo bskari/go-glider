@@ -280,7 +280,7 @@ func TestGetTurnDirection(t *testing.T) {
 
 	// Random tests
 	direction = GetTurnDirection(85, Point{1, 3, 0}, Point{2, -1, 0})
-	if direction != Left{
+	if direction != Left {
 		t.Errorf("Bad turn direction %v", direction)
 	}
 	direction = GetTurnDirection(180, Point{1, 3, 0}, Point{1, 2, 0})
