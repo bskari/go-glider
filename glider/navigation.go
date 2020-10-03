@@ -140,3 +140,16 @@ func GetTurnDirection(bearing Degrees, start, end Point) TurnDirection {
 	}
 	return UTurn
 }
+
+func GetAngleTo(bearing, goal Degrees) Degrees {
+	var part Degrees
+	if bearing > goal {
+		part = bearing - goal
+	} else {
+		part = goal - bearing
+	}
+	if part > 180 {
+		return 360 - part
+	}
+	return part
+}

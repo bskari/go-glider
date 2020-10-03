@@ -289,6 +289,39 @@ func TestGetTurnDirection(t *testing.T) {
 	}
 }
 
+func TestGetAngleTo(t *testing.T) {
+	if GetAngleTo(10, 40) != 30 {
+		t.Error("Bad angle")
+	}
+	if GetAngleTo(40, 10) != 30 {
+		t.Error("Bad angle")
+	}
+	if GetAngleTo(150, 190) != 40 {
+		t.Error("Bad angle")
+	}
+	if GetAngleTo(10, 10) != 0 {
+		t.Error("Bad angle")
+	}
+	if GetAngleTo(0, 180) != 180 {
+		t.Error("Bad angle")
+	}
+	if GetAngleTo(180, 0) != 180 {
+		t.Error("Bad angle")
+	}
+	if GetAngleTo(310, 130) != 180 {
+		t.Error("Bad angle")
+	}
+	if GetAngleTo(10, 340) != 30 {
+		t.Error("Bad angle")
+	}
+	if GetAngleTo(340, 10) != 30 {
+		t.Error("Bad angle")
+	}
+	if GetAngleTo(50, 310) != 100 {
+		t.Error("Bad angle")
+	}
+}
+
 func BenchmarkHaversineDistance(b *testing.B) {
 	start := Point{
 		Latitude:  40.0,
