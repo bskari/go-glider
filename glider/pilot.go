@@ -118,13 +118,20 @@ func (pilot *Pilot) runWaitForLaunch() {
 	pilot.state = flying
 }
 
-const P_MULTIPLIER = 0.5
+// TODO: Tune these
+const P_ROLL_MULTIPLIER = 0.5
+const P_PITCH_MULTIPLIER = 0.3
 
 func (pilot *Pilot) runFlying() {
+	//position := pilot.telemetry.GetPosition()
+
 	// First, check to see if we have landed
+	const PAWNEE_ALTITUDE_M = 1556
+	// TODO: When we launch the balloon, check that the altitude is
+	// below PAWNEE_ALTITUDE_M + 1000
 	if pilot.telemetry.GetSpeed() > 0.01 {
 		pilot.zeroSpeedTime = nil
-	} else if time.Since(*pilot.zeroSpeedTime).Seconds() > 5 {
+	} else if time.Since(*pilot.zeroSpeedTime).Seconds() > 10 {
 		pilot.state = landed
 		return
 	}
@@ -137,22 +144,37 @@ func (pilot *Pilot) runFlying() {
 		Logger.Errorf("Pilot unable to get axes: %v", err)
 		return
 	}
-	var angle Degrees
-	if axes.Roll < -45 {
-		angle = -45 * P_MULTIPLIER
-	} else if axes.Roll > 45 {
-		angle = 45 * P_MULTIPLIER
+	var leftAngle Degrees
+	const MAX_ROLL_D = 30
+	if axes.Roll < -MAX_ROLL_D {
+		leftAngle = -MAX_ROLL_D * P_ROLL_MULTIPLIER
+	} else if axes.Roll > MAX_ROLL_D {
+		leftAngle = MAX_ROLL_D * P_ROLL_MULTIPLIER
 	} else {
-		angle = axes.Roll * P_MULTIPLIER
+		leftAngle = axes.Roll * P_ROLL_MULTIPLIER
 	}
+	rightAngle := -leftAngle
 
-	// TODO: Adjust for pitch too
-	pilot.control.SetLeft(angle)
-	pilot.control.SetRight(-angle)
+	// TODO: Tune this
+	const TARGET_PITCH_D = -10
+	adjustment := (TARGET_PITCH_D - axes.Pitch) * P_PITCH_MULTIPLIER
+	const MAX_ADJUSTMENT_D = 25
+	if adjustment > MAX_ADJUSTMENT_D {
+		adjustment = MAX_ADJUSTMENT_D
+	} else if adjustment < -MAX_ADJUSTMENT_D {
+		adjustment = -MAX_ADJUSTMENT_D
+	}
+	leftAngle += adjustment
+	rightAngle += adjustment
+
+	pilot.control.SetLeft(90 + leftAngle)
+	pilot.control.SetRight(90 + rightAngle)
 }
 
 func (pilot *Pilot) runLanded() {
-	// TODO: Move the servos to center
+	// Move the servos to center
+	pilot.control.SetLeft(90)
+	pilot.control.SetRight(90)
 
 	// When the button is pressed, start over
 	buttonState := pilot.buttonPin.Read()
