@@ -246,11 +246,18 @@ loop:
 			// Output magnetometer readings
 			var xRawM, yRawM, zRawM int16
 			if magnetometer != nil {
+				x, y, z, err = accelerometer.Sense()
+				if err != nil {
+					panic(err)
+				}
 				xRawM, yRawM, zRawM, err = magnetometer.SenseRaw()
 				if err != nil {
 					panic(err)
 				}
 			} else {
+				x = physic.Force(offset + rand.Int63n(randRange))
+				y = physic.Force(offset + rand.Int63n(randRange))
+				z = physic.Force(offset+rand.Int63n(randRange)) + physic.EarthGravity
 				xRawM = int16(-10 + rand.Intn(21))
 				yRawM = int16(-10 + rand.Intn(21))
 				zRawM = int16(-10 + rand.Intn(21))
@@ -264,18 +271,18 @@ loop:
 
 			xHorizontal := float64(xRawM)*math.Cos(pitch_r) + float64(yRawM)*math.Sin(roll_r)*math.Sin(pitch_r) - float64(zRawM)*math.Cos(roll_r)*math.Sin(pitch_r)
 			yHorizontal := float64(yRawM)*math.Cos(roll_r) + float64(zRawM)*math.Sin(roll_r)
-			heading := glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))
+			heading_d := glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))
 			// The magnetometer is mounted rotated 180 degrees, so rotate it
-			heading = heading + 180
-			if heading > 360 {
-				heading -= 360
+			heading_d = heading_d + 180
+			if heading_d > 360 {
+				heading_d -= 360
 			}
 
 			writer.WriteLine("=== Magnetometer ===")
 			writer.IndentLine(fmt.Sprintf("x: %v, min: %v, max: %v", xRawM, xMinFlux, xMaxFlux))
 			writer.IndentLine(fmt.Sprintf("y: %v, min: %v, max: %v", yRawM, yMinFlux, yMaxFlux))
 			writer.IndentLine(fmt.Sprintf("z: %v, min: %v, max: %v", zRawM, zMinFlux, zMaxFlux))
-			writer.IndentLine(fmt.Sprintf("heading: %v", heading))
+			writer.IndentLine(fmt.Sprintf("heading: %v", heading_d))
 
 			// Output button state
 			var buttonState rpio.State

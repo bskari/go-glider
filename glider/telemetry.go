@@ -49,13 +49,56 @@ type Axes struct {
 	Yaw   Degrees
 }
 
+type sensor interface {
+	SenseRaw() (int16, int16, int16, error)
+}
+
+// The number of sensor readings to average together
+const sensorFilterAverageCount = 3
+
+type sensorFilter struct {
+	s                sensor
+	previousReadings [sensorFilterAverageCount][3]int32
+	name             string
+}
+
+func (filter *sensorFilter) SenseRaw() (int16, int16, int16, error) {
+	x, y, z, err := filter.s.SenseRaw()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	Logger.Debugf("%v: %v %v %v", filter.name, x, y, z)
+
+	// Move the previous readings down
+	const LEN = len(filter.previousReadings)
+	for i := 0; i < LEN-1; i++ {
+		for j := 0; j < 3; j++ {
+			filter.previousReadings[i][j] = filter.previousReadings[i+1][j]
+		}
+	}
+	filter.previousReadings[LEN-1][0] = int32(x)
+	filter.previousReadings[LEN-1][1] = int32(y)
+	filter.previousReadings[LEN-1][2] = int32(z)
+
+	var sums [3]int32
+	sums[0] = int32(x)
+	sums[1] = int32(y)
+	sums[2] = int32(z)
+	for i := 0; i < LEN-1; i++ {
+		for j := 0; j < 3; j++ {
+			sums[j] += filter.previousReadings[i][j]
+		}
+	}
+	return int16(sums[0] / int32(LEN)), int16(sums[1] / int32(LEN)), int16(sums[2] / int32(LEN)), nil
+}
+
 type Telemetry struct {
 	HasGpsLock    bool
 	recentPoint   Point
 	recentSpeed   MetersPerSecond
 	gps           *bufio.Reader
-	accelerometer *lsm303.Accelerometer
-	magnetometer  *lsm303.Magnetometer
+	accelerometer sensorFilter
+	magnetometer  sensorFilter
 	timestamp     int64
 }
 
@@ -94,14 +137,42 @@ func NewTelemetry() (*Telemetry, error) {
 			return nil, err
 		}
 	}
+
+	accelerometerFilter := sensorFilter{
+		s:    accelerometer,
+		name: "accel",
+	}
+	magnetometerFilter := sensorFilter{
+		s:    magnetometer,
+		name: "mag",
+	}
 	return &Telemetry{
 		recentPoint:   Point{Latitude: 40.0, Longitude: -105.2, Altitude: 1655},
 		recentSpeed:   0.0,
 		gps:           gps,
-		accelerometer: accelerometer,
-		magnetometer:  magnetometer,
+		accelerometer: accelerometerFilter,
+		magnetometer:  magnetometerFilter,
 		HasGpsLock:    false,
 	}, nil
+}
+
+func (telemetry *Telemetry) GetFilteredAxes() (Axes, error) {
+	xRawA, yRawA, zRawA, err := telemetry.accelerometer.SenseRaw()
+	if err != nil {
+		return Axes{0, 0, 0}, err
+	}
+	xRawM, yRawM, zRawM, err := telemetry.magnetometer.SenseRaw()
+	if err != nil {
+		return Axes{0, 0, 0}, err
+	}
+	return computeAxes(
+		xRawA,
+		yRawA,
+		zRawA,
+		xRawM,
+		yRawM,
+		zRawM,
+	), nil
 }
 
 func (telemetry *Telemetry) GetAxes() (Axes, error) {
@@ -116,12 +187,14 @@ func (telemetry *Telemetry) GetAxes() (Axes, error) {
 	if err != nil {
 		return Axes{0, 0, 0}, err
 	}
+	return computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM), nil
+}
 
+func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 	// Avoid divide by zero problems
 	if zRawA == 0 {
 		zRawA = 1
 	}
-
 	y2 := int32(yRawA) * int32(yRawA)
 	z2 := int32(zRawA) * int32(zRawA)
 
@@ -137,7 +210,7 @@ func (telemetry *Telemetry) GetAxes() (Axes, error) {
 		Pitch: ToDegrees(float32(pitch_r)),
 		Roll:  ToDegrees(float32(roll_r)),
 		Yaw:   ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal))),
-	}, nil
+	}
 }
 
 // Parse any waiting GPS messages. Users need not call this, but may.

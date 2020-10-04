@@ -111,11 +111,11 @@ func TestParseQueuedMessage(t *testing.T) {
 	fakeGps.lines = append(fakeGps.lines, "3,E*69\n")
 	// Hard case: split sentences
 	fakeGps.lines = append(fakeGps.lines, "$GPVTG,054.7,T,034.4,M,005.5,N")
-	fakeGps.lines = append(fakeGps.lines, ",007.2,K*4E\n$GPVTG,054.7,T,034.4,M,005.5,N\n")
+	fakeGps.lines = append(fakeGps.lines, ",007.2,K*4E\n$GPVTG,054.7,T,034.4,M,005.5,N,007.2,K*4E\n")
 	// Hard case: each read returns multiple sentences
 	fakeGps.lines = append(fakeGps.lines,
-		`$GPRMC,081836,A,3700.00,N,13300.00,W,000.0,360.0,130998,011.3,E*69\n
-		$GPGGA,134658.00,4300.00,S,04000,E,2,09,1.0,1048.47,M,-16.27,M,08,AAAA*43\n
+		`$GPRMC,081836,A,3700.00,N,13300.00,W,000.0,360.0,130998,011.3,E*69
+		$GPGGA,134658.00,4300.00,S,04000,E,2,09,1.0,1048.47,M,-16.27,M,08,AAAA*43
 		$GPVTG,054.7,T,034.4,M,005.5,N,007.2,K*4E\n`)
 
 	telemetry := Telemetry{
@@ -134,7 +134,42 @@ func TestParseQueuedMessage(t *testing.T) {
 			break
 		}
 	}
-	if fakeGps.count == 0 {
-		t.Error("Nothing was parsed")
+	if fakeGps.count != len(fakeGps.lines) {
+		t.Error("Not all messages were parsed")
+	}
+}
+
+type fakeSensor struct {
+	count int16
+}
+
+const increment = 2
+
+func (sensor *fakeSensor) SenseRaw() (int16, int16, int16, error) {
+	sensor.count += increment
+	return sensor.count, sensor.count, sensor.count, nil
+}
+
+func TestSensorFilter(t *testing.T) {
+	filter := sensorFilter{
+		s:    &fakeSensor{},
+		name: "fake",
+	}
+	for i := 0; i < 10; i++ {
+		x, y, z, err := filter.SenseRaw()
+		if err != nil {
+			t.Error("err")
+		}
+		if x != y || y != z {
+			t.Error("No match")
+		}
+		// We initialize the previousReadings with 0s, so we can't check
+		// anything until it's filled
+		if i < sensorFilterAverageCount {
+			continue
+		}
+		if x != int16(increment*i) {
+			t.Error("Bad average")
+		}
 	}
 }
