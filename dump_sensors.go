@@ -255,6 +255,8 @@ loop:
 					panic(err)
 				}
 			} else {
+				offset := -int64(physic.EarthGravity) / 10
+				randRange := int64(physic.EarthGravity) / 5
 				x = physic.Force(offset + rand.Int63n(randRange))
 				y = physic.Force(offset + rand.Int63n(randRange))
 				z = physic.Force(offset+rand.Int63n(randRange)) + physic.EarthGravity

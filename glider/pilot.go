@@ -23,6 +23,7 @@ type Pilot struct {
 	buttonPin       *rpio.Pin
 	buttonPressTime time.Time
 	zeroSpeedTime   *time.Time
+	waypoints       *Waypoints
 }
 
 func NewPilot() (*Pilot, error) {
@@ -55,6 +56,7 @@ func NewPilot() (*Pilot, error) {
 		buttonPin:       buttonPin,
 		buttonPressTime: time.Now(),
 		zeroSpeedTime:   nil,
+		waypoints:		 NewWaypoints(),
 	}, nil
 }
 
