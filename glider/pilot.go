@@ -32,10 +32,6 @@ func NewPilot() (*Pilot, error) {
 		return nil, err
 	}
 
-	err = rpio.Open()
-	if err != nil {
-		panic(err)
-	}
 	response := rpio.Pin(24)
 	buttonPin := &response
 	buttonPin.Input()

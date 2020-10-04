@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/bskari/go-glider/glider"
+	"github.com/stianeikeland/go-rpio/v4"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -19,9 +20,17 @@ func main() {
 
 	dumpSensorsPtr := flag.Bool("dump", false, "Dump the sensor data")
 	glidePtr := flag.Bool("glide", false, "Run the glide test")
+	servoPtr := flag.Bool("servo", false, "Run the servo test")
 	flag.Parse()
 
 	os.Mkdir("logs", 0655)
+
+	err := rpio.Open()
+	if err != nil {
+		fmt.Printf("Failed to initialize RPIO: %v\n", err)
+		return
+	}
+	defer rpio.Close()
 
 	if *dumpSensorsPtr {
 		dumpSensors()
@@ -35,6 +44,8 @@ func main() {
 		glider.ConfigureLogger(fileLog)
 
 		runGlide()
+	} else if *servoPtr {
+		testServos()
 	} else {
 		flag.PrintDefaults()
 	}

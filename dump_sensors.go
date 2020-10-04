@@ -94,10 +94,6 @@ func dumpSensors() {
 	// Set up button
 	var buttonPin *rpio.Pin
 	if glider.IsPi() {
-		err := rpio.Open()
-		if err != nil {
-			panic(err)
-		}
 		response := rpio.Pin(24)
 		buttonPin = &response
 		buttonPin.Input()
