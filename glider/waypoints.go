@@ -2,10 +2,10 @@ package glider
 
 // Continues through several waypoints, then repeats the last few
 type Waypoints struct {
-	first []Point
-	repeating []Point
-	index int
-	inRange bool
+	first            []Point
+	repeating        []Point
+	index            int
+	inRange          bool
 	previousDistance Meters
 }
 
@@ -15,20 +15,20 @@ func NewWaypoints() *Waypoints {
 		first: []Point{},
 		repeating: []Point{
 			Point{
-				Latitude: 40.055966,
+				Latitude:  40.055966,
 				Longitude: -195.290124,
 			},
 			Point{
-				Latitude: 40.055994,
+				Latitude:  40.055994,
 				Longitude: -195.288681,
 			},
 			Point{
-				Latitude: 40.054785,
+				Latitude:  40.054785,
 				Longitude: -195.289467,
 			},
 		},
-		index: 0,
-		inRange: false,
+		index:            0,
+		inRange:          false,
 		previousDistance: 1000000,
 	}
 }
@@ -37,20 +37,20 @@ func (waypoints *Waypoints) GetWaypoint() Point {
 	if waypoints.index < len(waypoints.first) {
 		return waypoints.first[waypoints.index]
 	}
-	if waypoints.index < len(waypoints.first) + len(waypoints.repeating) {
-		return waypoints.repeating[waypoints.index - len(waypoints.first)]
+	if waypoints.index < len(waypoints.first)+len(waypoints.repeating) {
+		return waypoints.repeating[waypoints.index-len(waypoints.first)]
 	}
 	Logger.Errorf("Invalid waypoints index: %v", waypoints.index)
 	// Just fly to Boulder I guess
 	return Point{
-		Latitude: 40.015,
+		Latitude:  40.015,
 		Longitude: -195.270,
 	}
 }
 
 func (waypoints *Waypoints) Next() {
 	waypoints.index++
-	if waypoints.index >= len(waypoints.first) + len(waypoints.repeating) {
+	if waypoints.index >= len(waypoints.first)+len(waypoints.repeating) {
 		waypoints.index = len(waypoints.first)
 	}
 	waypoints.inRange = false

@@ -56,7 +56,7 @@ func NewPilot() (*Pilot, error) {
 		buttonPin:       buttonPin,
 		buttonPressTime: time.Now(),
 		zeroSpeedTime:   nil,
-		waypoints:		 NewWaypoints(),
+		waypoints:       NewWaypoints(),
 	}, nil
 }
 

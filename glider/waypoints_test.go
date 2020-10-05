@@ -6,26 +6,26 @@ func createTestWaypoints() *Waypoints {
 	return &Waypoints{
 		first: []Point{
 			Point{
-				Latitude: 1,
+				Latitude:  1,
 				Longitude: 1,
 			},
 			Point{
-				Latitude: 2,
+				Latitude:  2,
 				Longitude: 2,
 			},
 		},
 		repeating: []Point{
 			Point{
-				Latitude: 3,
+				Latitude:  3,
 				Longitude: 3,
 			},
 			Point{
-				Latitude: 4,
+				Latitude:  4,
 				Longitude: 4,
 			},
 		},
-		index: 0,
-		inRange: false,
+		index:            0,
+		inRange:          false,
 		previousDistance: 1000000,
 	}
 }
