@@ -6,12 +6,16 @@ import (
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
-const LEFT_SERVO_PIN = 18  // BCM 18 = board 12
+const LEFT_SERVO_PIN = 12  // BCM 12 = board 32
 const RIGHT_SERVO_PIN = 13 // BCM 13 = board 33
 const HERTZ = 50
-const MULTIPLIER = 100000
-const CENTER_MS = 1400
-const NINETY_DEGREES_MS = 400
+// Originally I had MULTIPLIER set to 100_000 but then my cycle wouldn't come
+// out as 20 us, instead it was around 16? Checked with an oscilloscope. Maybe
+// some overflow.
+const MULTIPLIER = 20000
+const US_PER_CYCLE = (1000 * 1000) / HERTZ
+const US_PER_DEGREE = 800 / 90
+const ZERO_US = 1430 - US_PER_DEGREE * 90
 
 type Control struct {
 	left  rpio.Pin
@@ -45,18 +49,15 @@ func (control *Control) set(pin *rpio.Pin, angle Degrees) error {
 	// So, to set Pwm pin to freqency 38kHz with duty cycle 1/4, use this combination:
 	//  pin.DutyCycle(1, 4)
 	//  pin.Freq(38000*4)
-	if angle < 30 || angle > 150 {
+	if angle < 45 || angle > 135 {
 		return errors.New("Bad angle")
 	}
-	targetUs := uint32((float32(angle)-90.0)*NINETY_DEGREES_MS + CENTER_MS)
-	a := getDutyCycleForUs(targetUs, HERTZ, MULTIPLIER)
+	targetUs := uint32(angle*US_PER_DEGREE + ZERO_US)
+	a := getDutyCycleForUs(targetUs)
 	pin.DutyCycle(a, MULTIPLIER)
 	return nil
 }
 
-func getDutyCycleForUs(targetUs, frequencyHz, multiplier uint32) uint32 {
-	// We want a / multiplier = duty / cycle, where cycle = 1s / Hz
-	// a / multiplier = duty / (1,000,000 us / 50 hz) = 20,000 us
-	// a = duty / (1,000,000 us / 50 hz) * multiplier
-	return uint32(float32(targetUs) / (float32(1000*1000) / float32(frequencyHz)) * float32(multiplier))
+func getDutyCycleForUs(targetUs uint32) uint32 {
+	return targetUs * MULTIPLIER / US_PER_CYCLE
 }
