@@ -52,6 +52,23 @@ type sensor interface {
 	SenseRaw() (int16, int16, int16, error)
 }
 
+type serialInterface interface {
+	Available() int
+	ReadLine() (string, error)
+}
+
+type concreteSerial struct {
+	ser *serial.SerialPort
+}
+
+func (cs *concreteSerial) Available() int {
+	return cs.ser.Available()
+}
+
+func (cs *concreteSerial) ReadLine() (string, error) {
+	return cs.ser.ReadLine()
+}
+
 // The number of sensor readings to average together
 const sensorFilterAverageCount = 3
 
@@ -95,14 +112,14 @@ type Telemetry struct {
 	HasGpsLock    bool
 	recentPoint   Point
 	recentSpeed   MetersPerSecond
-	gps           *serial.SerialPort
+	gps           serialInterface
 	accelerometer sensorFilter
 	magnetometer  sensorFilter
 	timestamp     int64
 }
 
 func NewTelemetry() (*Telemetry, error) {
-	var gps *serial.SerialPort
+	var gps serialInterface
 	var accelerometer *lsm303.Accelerometer
 	var magnetometer *lsm303.Magnetometer
 	if IsPi() {
@@ -112,26 +129,19 @@ func NewTelemetry() (*Telemetry, error) {
 		}
 
 		// Prepare GPS
-		gps = serial.New()
-		gps.Verbose = false
-		err := gps.Open("/dev/ttyS0", 9600)
+		rawGps := serial.New()
+		rawGps.Verbose = false
+		err := rawGps.Open("/dev/ttyS0", 9600)
 		if err != nil {
 			return nil, err
 		}
-		// TODO: Figure out why `defer gps.Close()` causes an error when
-		// I try to read from it later. Is this because they local
-		// variable is going out of scope?
-		//defer gps.Close()
+		gps = &concreteSerial{ser: rawGps}
 
 		// Open a connection, using I²C as an example:
 		bus, err := i2creg.Open("")
 		if err != nil {
 			return nil, err
 		}
-		// TODO: Figure out why `defer bus.Close()` causes an error when
-		// I try to read from it later. Is this because they local
-		// variable is going out of scope?
-		//defer bus.Close()
 
 		// Prepare LSM303
 		accelerometer, err = lsm303.NewAccelerometer(bus, &lsm303.DefaultAccelerometerOpts)

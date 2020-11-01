@@ -1,7 +1,6 @@
 package glider
 
 import (
-	"bufio"
 	"io"
 	"testing"
 )
@@ -45,25 +44,32 @@ func BenchmarkParseSentence(b *testing.B) {
 	}
 }
 
-type FakeGps struct {
+type fakeSerial struct {
 	lines []string
 	count int
 }
 
-func (fakeGps *FakeGps) Read(buffer []byte) (count int, err error) {
-	if fakeGps.count >= len(fakeGps.lines) {
-		return 0, io.EOF
+func (fakeGps *fakeSerial) Available() int {
+	if fakeGps.count < len(fakeGps.lines)-1 {
+		return 1000
 	}
-	target := fakeGps.lines[fakeGps.count]
-	fakeGps.count++
-	for i := 0; i < len(target); i++ {
-		buffer[i] = target[i]
+	if fakeGps.count == len(fakeGps.lines)-1 {
+		return len(fakeGps.lines[len(fakeGps.lines)-1])
 	}
-	return len(target), nil
+	return 0
+}
+
+func (fakeGps *fakeSerial) ReadLine() (string, error) {
+	if fakeGps.count < len(fakeGps.lines) {
+		response := fakeGps.lines[fakeGps.count]
+		fakeGps.count += 1
+		return response, nil
+	}
+	return "", io.EOF
 }
 
 func TestGetPosition(t *testing.T) {
-	fakeGps := &FakeGps{lines: make([]string, 0), count: 0}
+	fakeGps := &fakeSerial{lines: make([]string, 0), count: 0}
 	// Easy case: each read returns a full sentence
 	fakeGps.lines = append(fakeGps.lines, "$GPRMC,081836,A,3700.00,N,13300.00,W,000.0,360.0,130998,011.3,E*69\n")
 	fakeGps.lines = append(fakeGps.lines, "$GPGGA,134658.00,4300.00,S,04000,E,2,09,1.0,1048.47,M,-16.27,M,08,AAAA*43\n")
@@ -87,7 +93,7 @@ func TestGetPosition(t *testing.T) {
 	telemetry := Telemetry{
 		recentPoint: Point{Latitude: 40.0, Longitude: -105.2, Altitude: 1655},
 		recentSpeed: 0.0,
-		gps:         bufio.NewReader(fakeGps),
+		gps:         fakeGps,
 	}
 
 	telemetry.GetPosition()
@@ -97,7 +103,7 @@ func TestGetPosition(t *testing.T) {
 }
 
 func TestParseQueuedMessage(t *testing.T) {
-	fakeGps := &FakeGps{lines: make([]string, 0), count: 0}
+	fakeGps := &fakeSerial{lines: make([]string, 0), count: 0}
 	// Easy case: each read returns a full sentence
 	fakeGps.lines = append(fakeGps.lines, "$GPRMC,081836,A,3700.00,N,13300.00,W,000.0,360.0,130998,011.3,E*69\n")
 	fakeGps.lines = append(fakeGps.lines, "$GPGGA,134658.00,4300.00,S,04000,E,2,09,1.0,1048.47,M,-16.27,M,08,AAAA*43\n")
@@ -121,7 +127,7 @@ func TestParseQueuedMessage(t *testing.T) {
 	telemetry := Telemetry{
 		recentPoint: Point{Latitude: 40.0, Longitude: -105.2, Altitude: 1655},
 		recentSpeed: 0.0,
-		gps:         bufio.NewReader(fakeGps),
+		gps:         fakeGps,
 	}
 
 	for {
