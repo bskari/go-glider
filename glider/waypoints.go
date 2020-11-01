@@ -41,10 +41,9 @@ func (waypoints *Waypoints) GetWaypoint() Point {
 		return waypoints.repeating[waypoints.index-len(waypoints.first)]
 	}
 	Logger.Errorf("Invalid waypoints index: %v", waypoints.index)
-	// Just fly to Boulder I guess
 	return Point{
-		Latitude:  40.015,
-		Longitude: -195.270,
+		Latitude:  configuration.DefaultWaypointLatitude,
+		Longitude: configuration.DefaultWaypointLongitude,
 	}
 }
 
@@ -61,7 +60,7 @@ func (waypoints *Waypoints) Reached(current Point) bool {
 	waypoint := waypoints.GetWaypoint()
 	distance := Distance(current, waypoint)
 	// If we are close, then we hit it
-	if distance < 20 {
+	if distance < configuration.WaypointReachedDistance {
 		return true
 	}
 	// If we were within range but have started going further away, count it as
@@ -70,7 +69,7 @@ func (waypoints *Waypoints) Reached(current Point) bool {
 		return true
 	}
 	waypoints.previousDistance = distance
-	if distance < 50 {
+	if distance < configuration.WaypointInRangeDistance {
 		waypoints.inRange = true
 	}
 	return false

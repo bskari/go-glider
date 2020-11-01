@@ -1,0 +1,48 @@
+# **** Navigation ****
+# One of 'haversine', 'sphericalLawOfCosines', 'equirectangular', or 'cachedEquirectangular'
+DistanceFormula = "cachedEquirectangular"
+# One of 'equirectangular', or 'cachedEquirectangular'
+BearingFormula = "cachedEquirectangular"
+
+# **** Waypoints ****
+# How close you need to be to consider a waypoint reached
+WaypointReachedDistance_m = 20.0
+# How close you need to be to consider a waypoint eventually reached
+WaypointInRangeDistance_m = 50.0
+# If no waypoints are left, go here
+DefaultWaypointLatitude = 40.015
+DefaultWaypointLongitude = -105.270
+
+# **** Telemetry ****
+# The pitch reading when the plane is level
+PitchOffset_d = -5.2
+# The roll reading when the plane is level
+RollOffset_id = 2.3
+MagnetometerXMax_t = 19.182
+MagnetometerXMin_t = -24.727
+MagnetometerYMax_t = 21.364
+MagnetometerYMin_t = -22.182
+Declinaton_d = 8.1
+
+# **** Pilot ****
+# The amount of time to sleep per iteration
+IterationSleepTime_s = 0.05
+LandNoMoveDuration_s = 5.0
+LaunchGlideDuration_s = 5.0
+ProportionalRollMultiplier = 0.5  # TODO: Tune this
+ProportionalPitchMultiplier = 0.3  # TODO: Tune this
+LandingPointAltitude_m = 1556.0
+LandingPointAltitudeOffset_m = 1000.0
+# The preferred pitch for gliding
+TargetPitch_d = -10.0  # TODO: Tune this
+# The max we're allowed to ajust the servos to adjust the pitch
+MaxServoPitchAdjustment_d = 25 # TODO: Tune this
+
+ # **** Pins ****
+ButtonPin = 24
+LeftServoPin = 12  # BCM 12 = board 32
+RightServoPin = 13  # BCM 13 = board 33
+
+# **** Miscellaneous ****
+# How long to sleep when an error occors so that we're not flooding the logs
+ErrorSleepDuration_s = 0.01

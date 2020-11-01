@@ -12,21 +12,6 @@ import (
 	"time"
 )
 
-// When the plane is level, the accelerometer gives these readings
-const PITCH_OFFSET_D = -5.2
-const ROLL_OFFSET_D = 2.3
-
-// Magnetometer calibration
-const MAGNETOMETER_X_MAX_T = 19.182
-const MAGNETOMETER_X_MIN_T = -24.727
-const MAGNETOMETER_X_OFFSET_T = (MAGNETOMETER_X_MAX_T + MAGNETOMETER_X_MIN_T) * 0.5
-const MAGNETOMETER_Y_MAX_T = 21.364
-const MAGNETOMETER_Y_MIN_T = -22.182
-const MAGNETOMETER_Y_OFFSET_T = (MAGNETOMETER_Y_MAX_T + MAGNETOMETER_Y_MIN_T) * 0.5
-
-// Declination from true north for Boulder
-const DECLINATION_D = 8.1
-
 type Degrees = float32
 type Radians = float32
 type Meters = float32

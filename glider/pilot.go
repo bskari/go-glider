@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type PilotState int
+type PilotState uint8
 
 const (
 	initializing PilotState = iota + 1
@@ -36,17 +36,10 @@ func NewPilot() (*Pilot, error) {
 		return nil, err
 	}
 
-	response := rpio.Pin(24)
+	response := rpio.Pin(configuration.ButtonPin)
 	buttonPin := &response
 	buttonPin.Input()
 	buttonPin.PullUp()
-
-	launchWait, _ := time.ParseDuration("5s")
-	landNoMoveDuration, _ := time.ParseDuration("5s")
-	pilotDurations = pilotDurationConstants{
-		launchWait:         launchWait,
-		landNoMoveDuration: landNoMoveDuration,
-	}
 
 	return &Pilot{
 		// TODO
@@ -98,7 +91,7 @@ func (pilot *Pilot) RunGlideTestForever() {
 		// TODO: Maybe we want to figure out how long one iteration
 		// took, then sleep an appropriate amount of time, so we can get
 		// close to however many cycles per second
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(configuration.IterationSleepTime)
 	}
 }
 
@@ -124,20 +117,14 @@ func (pilot *Pilot) runWaitForLaunch() {
 	pilot.state = flying
 }
 
-// TODO: Tune these
-const P_ROLL_MULTIPLIER = 0.5
-const P_PITCH_MULTIPLIER = 0.3
-
 func (pilot *Pilot) runFlying() {
 	//position := pilot.telemetry.GetPosition()
 
-	// First, check to see if we have landed
-	const PAWNEE_ALTITUDE_M = 1556
 	// TODO: When we launch the balloon, check that the altitude is
-	// below PAWNEE_ALTITUDE_M + 1000
-	if pilot.telemetry.GetSpeed() > 0.01 {
+	// below configuration.LandingPointAltitude + configuration.LandingPointAltitudeOffset
+	if pilot.telemetry.GetSpeed() > 0.1 {
 		pilot.zeroSpeedTime = nil
-	} else if time.Since(*pilot.zeroSpeedTime).Seconds() > 10 {
+	} else if time.Since(*pilot.zeroSpeedTime) > configuration.LandNoMoveDuration {
 		pilot.state = landed
 		return
 	}
@@ -148,31 +135,28 @@ func (pilot *Pilot) runFlying() {
 	if err != nil {
 		// I guess just log it?
 		Logger.Errorf("Pilot unable to get axes: %v", err)
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(configuration.ErrorSleepDuration)
 		return
 	}
 	var leftAngle Degrees
-	const MAX_ROLL_D = 30
-	if axes.Roll < -MAX_ROLL_D {
-		leftAngle = -MAX_ROLL_D * P_ROLL_MULTIPLIER
-	} else if axes.Roll > MAX_ROLL_D {
-		leftAngle = MAX_ROLL_D * P_ROLL_MULTIPLIER
-	} else {
-		leftAngle = axes.Roll * P_ROLL_MULTIPLIER
-	}
+	leftAngle = axes.Roll * configuration.ProportionalRollMultiplier
 	rightAngle := -leftAngle
 
 	// TODO: Tune this
-	const TARGET_PITCH_D = -10
-	adjustment := (TARGET_PITCH_D - axes.Pitch) * P_PITCH_MULTIPLIER
-	const MAX_ADJUSTMENT_D = 25
-	if adjustment > MAX_ADJUSTMENT_D {
-		adjustment = MAX_ADJUSTMENT_D
-	} else if adjustment < -MAX_ADJUSTMENT_D {
-		adjustment = -MAX_ADJUSTMENT_D
+	adjustment := (configuration.TargetPitch - axes.Pitch) * configuration.ProportionalPitchMultiplier
+	if adjustment > configuration.MaxServoPitchAdjustment {
+		adjustment = configuration.MaxServoPitchAdjustment
+	} else if adjustment < -configuration.MaxServoPitchAdjustment {
+		adjustment = -configuration.MaxServoPitchAdjustment
 	}
 	leftAngle += adjustment
 	rightAngle += adjustment
+
+	if leftAngle < -configuration.MaxServoAngleOffset {
+		leftAngle = -configuration.MaxServoAngleOffset
+	} else if leftAngle < -configuration.MaxServoAngleOffset {
+		leftAngle = configuration.MaxServoAngleOffset
+	}
 
 	pilot.control.SetLeft(90 + leftAngle)
 	pilot.control.SetRight(90 + rightAngle)
@@ -197,7 +181,7 @@ func (pilot *Pilot) runGlideLevel() {
 	if err != nil {
 		// I guess just log it?
 		Logger.Errorf("Pilot unable to get axes: %v", err)
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(configuration.ErrorSleepDuration)
 		return
 	}
 	// Let's only move the servo when it's changed a little so that the
@@ -223,10 +207,3 @@ func roundToUnit(x, unit float32) float32 {
 	value := math.Round(bigX/bigUnit) * bigUnit
 	return float32(value)
 }
-
-type pilotDurationConstants struct {
-	launchWait         time.Duration
-	landNoMoveDuration time.Duration
-}
-
-var pilotDurations pilotDurationConstants

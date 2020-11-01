@@ -4,14 +4,31 @@ import (
 	"math"
 )
 
+type distanceFormula_t uint8
+const (
+	DISTANCE_FORMULA_HAVERSINE distanceFormula_t = iota
+	DISTANCE_FORMULA_SPHERICAL_LAW_OF_COSINES
+	DISTANCE_FORMULA_EQUIRECTANGULAR
+	DISTANCE_FORMULA_CACHED_EQUIRECTANGULAR
+)
+
 // Calculate the distance between two points
 func Distance(p1, p2 Point) Meters {
-	// Just use equirectangular. It's much faster and we're not flying
-	// far enough for it to matter.
-	return cachedEquirectangularDistance(p1, p2)
+	switch configuration.DistanceFormula {
+		case DISTANCE_FORMULA_HAVERSINE:
+			return haversineDistance(p1, p2)
+		case DISTANCE_FORMULA_SPHERICAL_LAW_OF_COSINES:
+			return sphericalLawOfCosinesDistance(p1, p2)
+		case DISTANCE_FORMULA_EQUIRECTANGULAR:
+			return equirectangularDistance(p1, p2)
+		case DISTANCE_FORMULA_CACHED_EQUIRECTANGULAR:
+			return cachedEquirectangularDistance(p1, p2)
+		default:
+			panic("Bad distanceFormula")
+	}
 }
 
-const radius_m = 6371e3
+const RADIUS_M = 6371e3
 
 func haversineDistance(p1, p2 Point) Meters {
 	// Taken from https://www.movable-type.co.uk/scripts/latlong.html
@@ -21,21 +38,21 @@ func haversineDistance(p1, p2 Point) Meters {
 	deltaDelta := ToCoordinateRadians(p2.Longitude - p1.Longitude)
 	a := math.Sin(deltaPhi*0.5)*math.Sin(deltaPhi*0.5) + math.Cos(phi1)*math.Cos(phi2)*math.Sin(deltaDelta*0.5)*math.Sin(deltaDelta*0.5)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	return float32(radius_m * c)
+	return float32(RADIUS_M * c)
 }
 
 func sphericalLawOfCosinesDistance(p1, p2 Point) Meters {
 	phi1 := ToCoordinateRadians(p1.Latitude)
 	phi2 := ToCoordinateRadians(p2.Latitude)
 	deltaLambda := ToCoordinateRadians(p2.Longitude - p1.Longitude)
-	return Meters(math.Acos(math.Sin(phi1)*math.Sin(phi2)+math.Cos(phi1)*math.Cos(phi2)*math.Cos(deltaLambda)) * radius_m)
+	return Meters(math.Acos(math.Sin(phi1)*math.Sin(phi2)+math.Cos(phi1)*math.Cos(phi2)*math.Cos(deltaLambda)) * RADIUS_M)
 }
 
 func latitudeDistance(lat1, lat2 Coordinate) Meters {
 	phi1 := ToCoordinateRadians(lat1)
 	phi2 := ToCoordinateRadians(lat2)
 	y := (phi2 - phi1)
-	return Meters(y * radius_m)
+	return Meters(y * RADIUS_M)
 }
 
 func longitudeDistance(p1, p2 Point) Meters {
@@ -44,7 +61,7 @@ func longitudeDistance(p1, p2 Point) Meters {
 	phi1 := ToCoordinateRadians(p1.Latitude)
 	phi2 := ToCoordinateRadians(p2.Latitude)
 	x := (lambda2 - lambda1) * math.Cos((phi1+phi2)*0.5)
-	return Meters(x * radius_m)
+	return Meters(x * RADIUS_M)
 }
 
 func equirectangularDistance(p1, p2 Point) Meters {
@@ -60,7 +77,7 @@ func cachedLongitudeDistance(p1, p2 Point) Meters {
 	if longitudeMultiplier == nil {
 		phi1 := ToCoordinateRadians(p1.Latitude)
 		phi2 := ToCoordinateRadians(p2.Latitude)
-		temp := math.Cos((phi1+phi2)*0.5) * radius_m
+		temp := math.Cos((phi1+phi2)*0.5) * RADIUS_M
 		longitudeMultiplier = &temp
 	}
 	lambda1 := ToCoordinateRadians(p1.Longitude)
@@ -98,9 +115,22 @@ func cachedEquirectangularBearing(start, end Point) Degrees {
 	return bearing
 }
 
+type bearingFormula_t uint8
+const (
+	BEARING_FORMULA_EQUIRECTANGULAR bearingFormula_t = iota
+	BEARING_FORMULA_CACHED_EQUIRECTANGULAR
+)
+
 // Returns the course from p1 to p2
 func Course(p1, p2 Point) Degrees {
-	return cachedEquirectangularBearing(p1, p2)
+	switch configuration.BearingFormula {
+	case BEARING_FORMULA_EQUIRECTANGULAR:
+			return equirectangularBearing(p1, p2)
+		case BEARING_FORMULA_CACHED_EQUIRECTANGULAR:
+			return cachedEquirectangularBearing(p1, p2)
+		default:
+			panic("Bad bearingFormula")
+	}
 }
 
 type TurnDirection uint8

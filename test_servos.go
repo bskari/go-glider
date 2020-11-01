@@ -10,6 +10,9 @@ import (
 	"time"
 )
 
+const LEFT_SERVO_PIN = 12
+const RIGHT_SERVO_PIN = 13
+
 func testServos() {
 	if !glider.IsPi() {
 		fmt.Println("Not a Pi")
@@ -53,8 +56,8 @@ func controlTest() {
 
 // Manual testing with oscilloscope
 func manualTest() {
-	left := rpio.Pin(glider.LEFT_SERVO_PIN)
-	right := rpio.Pin(glider.RIGHT_SERVO_PIN)
+	left := rpio.Pin(LEFT_SERVO_PIN)
+	right := rpio.Pin(RIGHT_SERVO_PIN)
 	left.Pwm()
 	right.Pwm()
 	const HERTZ = glider.HERTZ

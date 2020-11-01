@@ -3,6 +3,7 @@ module github.com/bskari/go-glider
 go 1.11
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/adrianmo/go-nmea v1.3.0
 	github.com/argandas/serial v0.0.0-20160316175758-889a5ad85462
 	github.com/bskari/go-lsm303 v0.0.0-20200927082938-3432d22cb4f1

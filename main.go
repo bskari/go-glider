@@ -96,14 +96,6 @@ func main() {
 	if *dumpSensorsPtr {
 		dumpSensors()
 	} else if *glidePtr {
-		logName := getLogName(true)
-		fileLog, err := os.OpenFile(logName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			panic(err)
-		}
-		defer fileLog.Close()
-		glider.ConfigureLogger(fileLog)
-
 		runGlide()
 	} else if *servoPtr {
 		testServos()
@@ -116,6 +108,17 @@ func runGlide() {
 	telemetry, err := glider.NewTelemetry()
 	if err != nil {
 		panic(fmt.Sprintf("Couldn't initialize telemetry: %v", err))
+	}
+
+	// Load configuration
+	file, err := os.Open("conf.json")
+	if err != nil {
+		panic("Couldn't open configuration file")
+	}
+	defer file.Close()
+	err = glider.LoadConfiguration(file)
+	if err != nil {
+		panic(err)
 	}
 
 	// Wait for the GPS to get a lock, so we can set the clock

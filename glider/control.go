@@ -6,8 +6,6 @@ import (
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
-const LEFT_SERVO_PIN = 12  // BCM 12 = board 32
-const RIGHT_SERVO_PIN = 13 // BCM 13 = board 33
 const HERTZ = 50
 
 // Originally I had MULTIPLIER set to 100_000 but then my cycle wouldn't come
@@ -25,8 +23,8 @@ type Control struct {
 
 func NewControl() *Control {
 	control := Control{
-		left:  rpio.Pin(LEFT_SERVO_PIN),
-		right: rpio.Pin(RIGHT_SERVO_PIN),
+		left:  rpio.Pin(configuration.LeftServoPin),
+		right: rpio.Pin(configuration.RightServoPin),
 	}
 	control.left.Mode(rpio.Pwm)
 	control.right.Mode(rpio.Pwm)
