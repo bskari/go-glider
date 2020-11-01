@@ -4,11 +4,13 @@ go 1.11
 
 require (
 	github.com/adrianmo/go-nmea v1.3.0
+	github.com/argandas/serial v0.0.0-20160316175758-889a5ad85462
 	github.com/bskari/go-lsm303 v0.0.0-20200927082938-3432d22cb4f1
 	github.com/fatih/color v1.9.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
+	github.com/mikepb/go-serial v0.0.0-20201030162908-19fa9bf168fc
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/nsf/termbox-go v0.0.0-20200418040025-38ba6e5628f1
 	github.com/stianeikeland/go-rpio/v4 v4.4.0

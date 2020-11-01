@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-
 func testServos() {
 	if !glider.IsPi() {
 		fmt.Println("Not a Pi")
@@ -32,7 +31,7 @@ func controlTest() {
 	angle += 5.0
 	time.Sleep(3 * time.Second)
 
-	for angle < 90.0 + 45.0 {
+	for angle < 90.0+45.0 {
 		fmt.Printf("Setting angle to %v\n", angle)
 		control.SetLeft(angle)
 		time.Sleep(250 * time.Millisecond)
@@ -91,6 +90,6 @@ func manualTest() {
 		if err != nil {
 			fmt.Printf("Bad line: %v\n", err)
 		}
-		line = line[:len(line) - 1]
+		line = line[:len(line)-1]
 	}
 }

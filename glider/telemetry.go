@@ -1,10 +1,9 @@
 package glider
 
 import (
-	"bufio"
 	"github.com/adrianmo/go-nmea"
+	"github.com/argandas/serial"
 	"github.com/bskari/go-lsm303"
-	"github.com/tarm/serial"
 	"log"
 	"math"
 	"periph.io/x/periph/conn/i2c/i2creg"
@@ -96,14 +95,14 @@ type Telemetry struct {
 	HasGpsLock    bool
 	recentPoint   Point
 	recentSpeed   MetersPerSecond
-	gps           *bufio.Reader
+	gps           *serial.SerialPort
 	accelerometer sensorFilter
 	magnetometer  sensorFilter
 	timestamp     int64
 }
 
 func NewTelemetry() (*Telemetry, error) {
-	var gps *bufio.Reader
+	var gps *serial.SerialPort
 	var accelerometer *lsm303.Accelerometer
 	var magnetometer *lsm303.Magnetometer
 	if IsPi() {
@@ -113,19 +112,26 @@ func NewTelemetry() (*Telemetry, error) {
 		}
 
 		// Prepare GPS
-		config := serial.Config{Name: "/dev/ttyS0", Baud: 9600, ReadTimeout: time.Millisecond * 0}
-		gps_, err := serial.OpenPort(&config)
+		gps = serial.New()
+		gps.Verbose = false
+		err := gps.Open("/dev/ttyS0", 9600)
 		if err != nil {
 			return nil, err
 		}
-		gps = bufio.NewReader(gps_)
+		// TODO: Figure out why `defer gps.Close()` causes an error when
+		// I try to read from it later. Is this because they local
+		// variable is going out of scope?
+		//defer gps.Close()
 
 		// Open a connection, using I²C as an example:
 		bus, err := i2creg.Open("")
 		if err != nil {
 			return nil, err
 		}
-		defer bus.Close()
+		// TODO: Figure out why `defer bus.Close()` causes an error when
+		// I try to read from it later. Is this because they local
+		// variable is going out of scope?
+		//defer bus.Close()
 
 		// Prepare LSM303
 		accelerometer, err = lsm303.NewAccelerometer(bus, &lsm303.DefaultAccelerometerOpts)
@@ -179,12 +185,14 @@ func (telemetry *Telemetry) GetAxes() (Axes, error) {
 	xRawA, yRawA, zRawA, err := telemetry.accelerometer.SenseRaw()
 	Logger.Debugf("accel %v %v %v", xRawA, yRawA, zRawA)
 	if err != nil {
+		Logger.Info("accelerometer.SenseRaw failed")
 		return Axes{0, 0, 0}, err
 	}
 
 	xRawM, yRawM, zRawM, err := telemetry.magnetometer.SenseRaw()
 	Logger.Debugf("mag %v %v %v", xRawM, yRawM, zRawM)
 	if err != nil {
+		Logger.Info("magnetometer.SenseRaw failed")
 		return Axes{0, 0, 0}, err
 	}
 	return computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM), nil
@@ -215,17 +223,23 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 
 // Parse any waiting GPS messages. Users need not call this, but may.
 func (telemetry *Telemetry) ParseQueuedMessage() (bool, error) {
-	parsed := false
-	line, err := telemetry.gps.ReadString('\n')
-	if err != nil {
-		return false, err
+	const MINIMUM_BUFFER = 100
+
+	if telemetry.gps.Available() > MINIMUM_BUFFER {
+		// If there is still a message queued, then parse it
+		line, err := telemetry.gps.ReadLine()
+		if err != nil {
+			return false, err
+		}
+		if line != "" {
+			Logger.Debug(strings.TrimSpace(line))
+			telemetry.parseSentence(line)
+		}
+		return true, nil
 	}
-	if line != "" {
-		Logger.Debug(strings.TrimSpace(line))
-		telemetry.parseSentence(line)
-		parsed = true
-	}
-	return parsed, nil
+
+	// No message is ready, let's abort
+	return false, nil
 }
 
 func (telemetry *Telemetry) GetPosition() Point {

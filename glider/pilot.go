@@ -2,6 +2,8 @@ package glider
 
 import (
 	"github.com/stianeikeland/go-rpio/v4"
+	"io"
+	"math"
 	"time"
 )
 
@@ -13,6 +15,7 @@ const (
 	waitingForLaunch
 	flying
 	landed
+	testMode
 )
 
 type Pilot struct {
@@ -24,6 +27,7 @@ type Pilot struct {
 	buttonPressTime time.Time
 	zeroSpeedTime   *time.Time
 	waypoints       *Waypoints
+	previousUpdateR float32
 }
 
 func NewPilot() (*Pilot, error) {
@@ -45,7 +49,9 @@ func NewPilot() (*Pilot, error) {
 	}
 
 	return &Pilot{
-		state:           initializing,
+		// TODO
+		//state:           initializing,
+		state:           testMode,
 		control:         NewControl(),
 		telemetry:       telemetry,
 		statusIndicator: NewLedStatusIndicator(uint8(initializing)),
@@ -65,7 +71,7 @@ func (pilot *Pilot) RunGlideTestForever() {
 		// Parse all queued messages
 		for {
 			parsed, err := pilot.telemetry.ParseQueuedMessage()
-			if err != nil {
+			if err != nil && err != io.EOF {
 				Logger.Errorf("Unable to parse GPS message: %v", err)
 				break
 			}
@@ -85,12 +91,14 @@ func (pilot *Pilot) RunGlideTestForever() {
 			pilot.runFlying()
 		case landed:
 			pilot.runLanded()
+		case testMode:
+			pilot.runGlideLevel()
 		}
 
 		// TODO: Maybe we want to figure out how long one iteration
 		// took, then sleep an appropriate amount of time, so we can get
 		// close to however many cycles per second
-		time.Sleep(50)
+		time.Sleep(50 * time.Millisecond)
 	}
 }
 
@@ -140,6 +148,7 @@ func (pilot *Pilot) runFlying() {
 	if err != nil {
 		// I guess just log it?
 		Logger.Errorf("Pilot unable to get axes: %v", err)
+		time.Sleep(10 * time.Millisecond)
 		return
 	}
 	var leftAngle Degrees
@@ -180,6 +189,39 @@ func (pilot *Pilot) runLanded() {
 		pilot.state = waitingForLaunch
 		Logger.Info("Waiting for launch")
 	}
+}
+
+// Just adjust the ailerons to fly level. Good for testing.
+func (pilot *Pilot) runGlideLevel() {
+	axes, err := pilot.telemetry.GetAxes()
+	if err != nil {
+		// I guess just log it?
+		Logger.Errorf("Pilot unable to get axes: %v", err)
+		time.Sleep(10 * time.Millisecond)
+		return
+	}
+	// Let's only move the servo when it's changed a little so that the
+	// servo isn't freaking out due to noisy sensors
+	if math.Abs(float64(pilot.previousUpdateR-axes.Roll)) < 2 {
+		return
+	}
+	pilot.previousUpdateR = axes.Roll
+	angle := 90 + axes.Roll*1.5
+	if angle > 90+45 {
+		angle = 90 + 45
+	} else if angle < 90-45 {
+		angle = 90 - 45
+	}
+	angle = roundToUnit(angle, 3)
+	pilot.control.SetLeft(angle)
+	pilot.control.SetRight(-angle)
+}
+
+func roundToUnit(x, unit float32) float32 {
+	bigX := float64(x)
+	bigUnit := float64(unit)
+	value := math.Round(bigX/bigUnit) * bigUnit
+	return float32(value)
 }
 
 type pilotDurationConstants struct {

@@ -9,13 +9,14 @@ import (
 const LEFT_SERVO_PIN = 12  // BCM 12 = board 32
 const RIGHT_SERVO_PIN = 13 // BCM 13 = board 33
 const HERTZ = 50
+
 // Originally I had MULTIPLIER set to 100_000 but then my cycle wouldn't come
 // out as 20 us, instead it was around 16? Checked with an oscilloscope. Maybe
 // some overflow.
 const MULTIPLIER = 20000
 const US_PER_CYCLE = (1000 * 1000) / HERTZ
 const US_PER_DEGREE = 800 / 90
-const ZERO_US = 1430 - US_PER_DEGREE * 90
+const ZERO_US = 1430 - US_PER_DEGREE*90
 
 type Control struct {
 	left  rpio.Pin
