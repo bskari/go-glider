@@ -12,27 +12,66 @@ import (
 	"time"
 )
 
-// The pins are numbered 1-40, starting on the inside next to the SD card, then
-// going to its twin, then down.
+// In side order. The pins are numbered 1-40, starting on the inside on the SD
+// card side, then going to its twin, then down.
+// Power connections:
+// 2 = 5V, connect to power +
+// 39 = ground, connect to power -
 // GPS connections:
 // 1 = 3.3V, connect to GPS VCC
 // 6 = ground, connect to GPS ground
 // 8 = TXD, connect to GPS RXD
 // 10 = RXD, connect to GPS TXD
 // Accelerometer, LSM303DLHC connections:
-// 2 = 5.5V, connect to accelerometer VIN
+// 4 = 5V, connect to accelerometer VIN
 // 9 = ground, connect to accelerometer ground
 // 5 = SCL, connect to accelerometer SCL
 // 3 = SDA, connect to accelerometer SDA
 // Servo connections:
-// 32 (BCM 12) = left servo yellow wire
-// 33 (BCM 13) = right servo yellow wire
+// 32 (orange) = BCM 12 / PWM0 = left servo yellow wire
+// 33 (yellow) = BCM 13 / PWM1 = right servo yellow wire
 // 34 = ground, connect to AA black
 // servo orange = +, connect to AA red
 // servo brown = -, connect to AA black
 // Button connections:
-// 18 (BCM 24) = connect to button
+// 18 = BCM 24, connect to button
 // 20 = ground, connect to button
+
+// In pin order:
+// 1 = 3.3V, connect to GPS VCC
+// 2 = 5V, connect to Pi power +
+// 3 = SDA, connect to accelerometer SDA
+// 4 = 5V, connect to accelerometer VIN
+// 5 = SCL, connect to accelerometer SCL
+// 6 = ground, connect to GPS ground
+// 8 = TXD, connect to GPS RXD
+// 9 = ground, connect to accelerometer ground
+// 10 = RXD, connect to GPS TXD
+// 18 = BCM 24, connect to button
+// 20 = ground, connect to button
+// 32 (orange) = BCM 12 / PWM0 = left servo yellow wire
+// 33 (yellow) = BCM 13 / PWM1 = right servo yellow wire
+// 34 = ground, connect to AA black
+// 39 = ground, connect to Pi power -
+
+// In side order:
+// Inner side, starting on SD card side:
+// 1 = 3.3V, connect to GPS VCC
+// 3 = SDA, connect to accelerometer SDA
+// 5 = SCL, connect to accelerometer SCL
+// 9 = ground, connect to accelerometer ground
+// 33 (yellow) = BCM 13 / PWM1 = right servo yellow wire
+// 39 = ground, connect to Pi power -
+// Outer side, starting on SD card side:
+// 2 = 5V, connect to Pi power +
+// 4 = 5V, connect to accelerometer VIN
+// 6 = ground, connect to GPS ground
+// 8 = TXD, connect to GPS RXD
+// 10 = RXD, connect to GPS TXD
+// 18 = BCM 24, connect to button
+// 20 = ground, connect to button
+// 32 (orange) = BCM 12 / PWM0 = left servo yellow wire
+// 34 = ground, connect to AA black
 
 func main() {
 	if os.Getuid() != 0 {
