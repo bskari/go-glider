@@ -17,11 +17,13 @@ DefaultWaypointLongitude = -105.270
 # The pitch reading when the plane is level
 PitchOffset_d = -5.2
 # The roll reading when the plane is level
-RollOffset_id = 2.3
+RollOffset_d = 2.3
+# Hard offset readings from the magnetometer
 MagnetometerXMax_t = 19.182
 MagnetometerXMin_t = -24.727
 MagnetometerYMax_t = 21.364
 MagnetometerYMin_t = -22.182
+# Compass declination in Boulder
 Declinaton_d = 8.1
 
 # **** Pilot ****

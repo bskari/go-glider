@@ -166,6 +166,8 @@ type configuration_t struct {
 	WaypointInRangeDistance     Meters
 	DefaultWaypointLatitude     Coordinate
 	DefaultWaypointLongitude    Coordinate
+	PitchOffset                 Degrees
+	RollOffset                  Degrees
 	MagnetometerXOffset_t       float32
 	MagnetometerYOffset_t       float32
 	Declination                 Degrees
@@ -197,6 +199,8 @@ type tomlConfiguration_t struct {
 	WaypointInRangeDistance_m    float64
 	DefaultWaypointLatitude      float64
 	DefaultWaypointLongitude     float64
+	PitchOffset_d                float64
+	RollOffset_d                 float64
 	MagnetometerXMax_t           float64
 	MagnetometerXMin_t           float64
 	MagnetometerYMax_t           float64
@@ -252,6 +256,8 @@ func LoadConfiguration(configurationReader io.Reader) error {
 	configuration.DefaultWaypointLatitude = tomlConfiguration.DefaultWaypointLatitude
 	configuration.DefaultWaypointLongitude = tomlConfiguration.DefaultWaypointLongitude
 
+	configuration.PitchOffset = Degrees(tomlConfiguration.PitchOffset_d)
+	configuration.RollOffset = Degrees(tomlConfiguration.RollOffset_d)
 	configuration.MagnetometerXOffset_t = float32(tomlConfiguration.MagnetometerXMax_t + tomlConfiguration.MagnetometerXMin_t*0.5)
 	configuration.MagnetometerYOffset_t = float32(tomlConfiguration.MagnetometerYMax_t + tomlConfiguration.MagnetometerYMin_t*0.5)
 	configuration.Declination = float32(tomlConfiguration.Declination_d)
