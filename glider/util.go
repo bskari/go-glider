@@ -2,11 +2,11 @@ package glider
 
 import (
 	"errors"
+	"github.com/BurntSushi/toml"
 	"io"
 	"io/ioutil"
 	"log"
 	"math"
-	"github.com/BurntSushi/toml"
 	"strings"
 	"testing"
 	"time"
@@ -160,30 +160,31 @@ func ToCoordinateRadians(coordinate Coordinate) float64 {
 }
 
 type configuration_t struct {
-	DistanceFormula distanceFormula_t
-	BearingFormula bearingFormula_t
-	WaypointReachedDistance Meters
-	WaypointInRangeDistance Meters
-	DefaultWaypointLatitude Coordinate
-	DefaultWaypointLongitude Coordinate
-	MagnetometerXOffset_t float32
-	MagnetometerYOffset_t float32
-	Declination Degrees
-	IterationSleepTime time.Duration
-	LandNoMoveDuration time.Duration
-	LaunchGlideDuration time.Duration
-	ProportionalRollMultiplier float32
+	DistanceFormula             distanceFormula_t
+	BearingFormula              bearingFormula_t
+	WaypointReachedDistance     Meters
+	WaypointInRangeDistance     Meters
+	DefaultWaypointLatitude     Coordinate
+	DefaultWaypointLongitude    Coordinate
+	MagnetometerXOffset_t       float32
+	MagnetometerYOffset_t       float32
+	Declination                 Degrees
+	IterationSleepTime          time.Duration
+	LandNoMoveDuration          time.Duration
+	LaunchGlideDuration         time.Duration
+	ProportionalRollMultiplier  float32
 	ProportionalPitchMultiplier float32
-	LandingPointAltitude Meters
-	LandingPointAltitudeOffset Meters
-	TargetPitch Degrees
-	MaxServoPitchAdjustment Degrees
-	MaxServoAngleOffset Degrees
-	ButtonPin uint8
-	LeftServoPin uint8
-	RightServoPin uint8
-	ErrorSleepDuration time.Duration
+	LandingPointAltitude        Meters
+	LandingPointAltitudeOffset  Meters
+	TargetPitch                 Degrees
+	MaxServoPitchAdjustment     Degrees
+	MaxServoAngleOffset         Degrees
+	ButtonPin                   uint8
+	LeftServoPin                uint8
+	RightServoPin               uint8
+	ErrorSleepDuration          time.Duration
 }
+
 var configuration configuration_t
 
 type tomlConfiguration_t struct {
@@ -191,30 +192,30 @@ type tomlConfiguration_t struct {
 	// or "cachedEquirectangular"
 	DistanceFormula string
 	// One of "equirectangular", "cachedEquirectangular"
-	BearingFormula string
-	WaypointReachedDistance_m float64
-	WaypointInRangeDistance_m float64
-	DefaultWaypointLatitude float64
-	DefaultWaypointLongitude float64
-	MagnetometerXMax_t  float64
-	MagnetometerXMin_t  float64
-	MagnetometerYMax_t  float64
-	MagnetometerYMin_t  float64
-	Declination_d float64
-	IterationSleepTime_s float64
-	LandNoMoveDuration_s float64
-	LaunchGlideDuration_s float64
-	ProportionalRollMultiplier float64
-	ProportionalPitchMultiplier float64
-	LandingPointAltitude_m float64
+	BearingFormula               string
+	WaypointReachedDistance_m    float64
+	WaypointInRangeDistance_m    float64
+	DefaultWaypointLatitude      float64
+	DefaultWaypointLongitude     float64
+	MagnetometerXMax_t           float64
+	MagnetometerXMin_t           float64
+	MagnetometerYMax_t           float64
+	MagnetometerYMin_t           float64
+	Declination_d                float64
+	IterationSleepTime_s         float64
+	LandNoMoveDuration_s         float64
+	LaunchGlideDuration_s        float64
+	ProportionalRollMultiplier   float64
+	ProportionalPitchMultiplier  float64
+	LandingPointAltitude_m       float64
 	LandingPointAltitudeOffset_m float64
-	TargetPitch_d float64
-	MaxServoPitchAdjustment_d float64
-	MaxServoAngleOffset_d float64
-	ButtonPin int64
-	LeftServoPin int64
-	RightServoPin int64
-	ErrorSleepDuration_s float64
+	TargetPitch_d                float64
+	MaxServoPitchAdjustment_d    float64
+	MaxServoAngleOffset_d        float64
+	ButtonPin                    int64
+	LeftServoPin                 int64
+	RightServoPin                int64
+	ErrorSleepDuration_s         float64
 }
 
 func LoadConfiguration(configurationReader io.Reader) error {
@@ -251,8 +252,8 @@ func LoadConfiguration(configurationReader io.Reader) error {
 	configuration.DefaultWaypointLatitude = tomlConfiguration.DefaultWaypointLatitude
 	configuration.DefaultWaypointLongitude = tomlConfiguration.DefaultWaypointLongitude
 
-	configuration.MagnetometerXOffset_t = float32(tomlConfiguration.MagnetometerXMax_t + tomlConfiguration.MagnetometerXMin_t * 0.5)
-	configuration.MagnetometerYOffset_t = float32(tomlConfiguration.MagnetometerYMax_t + tomlConfiguration.MagnetometerYMin_t * 0.5)
+	configuration.MagnetometerXOffset_t = float32(tomlConfiguration.MagnetometerXMax_t + tomlConfiguration.MagnetometerXMin_t*0.5)
+	configuration.MagnetometerYOffset_t = float32(tomlConfiguration.MagnetometerYMax_t + tomlConfiguration.MagnetometerYMin_t*0.5)
 	configuration.Declination = float32(tomlConfiguration.Declination_d)
 
 	configuration.IterationSleepTime = time.Duration(tomlConfiguration.IterationSleepTime_s) * time.Second

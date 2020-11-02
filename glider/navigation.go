@@ -5,6 +5,7 @@ import (
 )
 
 type distanceFormula_t uint8
+
 const (
 	DISTANCE_FORMULA_HAVERSINE distanceFormula_t = iota
 	DISTANCE_FORMULA_SPHERICAL_LAW_OF_COSINES
@@ -15,16 +16,16 @@ const (
 // Calculate the distance between two points
 func Distance(p1, p2 Point) Meters {
 	switch configuration.DistanceFormula {
-		case DISTANCE_FORMULA_HAVERSINE:
-			return haversineDistance(p1, p2)
-		case DISTANCE_FORMULA_SPHERICAL_LAW_OF_COSINES:
-			return sphericalLawOfCosinesDistance(p1, p2)
-		case DISTANCE_FORMULA_EQUIRECTANGULAR:
-			return equirectangularDistance(p1, p2)
-		case DISTANCE_FORMULA_CACHED_EQUIRECTANGULAR:
-			return cachedEquirectangularDistance(p1, p2)
-		default:
-			panic("Bad distanceFormula")
+	case DISTANCE_FORMULA_HAVERSINE:
+		return haversineDistance(p1, p2)
+	case DISTANCE_FORMULA_SPHERICAL_LAW_OF_COSINES:
+		return sphericalLawOfCosinesDistance(p1, p2)
+	case DISTANCE_FORMULA_EQUIRECTANGULAR:
+		return equirectangularDistance(p1, p2)
+	case DISTANCE_FORMULA_CACHED_EQUIRECTANGULAR:
+		return cachedEquirectangularDistance(p1, p2)
+	default:
+		panic("Bad distanceFormula")
 	}
 }
 
@@ -116,6 +117,7 @@ func cachedEquirectangularBearing(start, end Point) Degrees {
 }
 
 type bearingFormula_t uint8
+
 const (
 	BEARING_FORMULA_EQUIRECTANGULAR bearingFormula_t = iota
 	BEARING_FORMULA_CACHED_EQUIRECTANGULAR
@@ -125,11 +127,11 @@ const (
 func Course(p1, p2 Point) Degrees {
 	switch configuration.BearingFormula {
 	case BEARING_FORMULA_EQUIRECTANGULAR:
-			return equirectangularBearing(p1, p2)
-		case BEARING_FORMULA_CACHED_EQUIRECTANGULAR:
-			return cachedEquirectangularBearing(p1, p2)
-		default:
-			panic("Bad bearingFormula")
+		return equirectangularBearing(p1, p2)
+	case BEARING_FORMULA_CACHED_EQUIRECTANGULAR:
+		return cachedEquirectangularBearing(p1, p2)
+	default:
+		panic("Bad bearingFormula")
 	}
 }
 

@@ -19,15 +19,16 @@ const (
 )
 
 type Pilot struct {
-	state           PilotState
-	telemetry       *Telemetry
-	control         *Control
-	statusIndicator *LedStatusIndicator
-	buttonPin       *rpio.Pin
-	buttonPressTime time.Time
-	zeroSpeedTime   *time.Time
-	waypoints       *Waypoints
-	previousUpdateR float32
+	state               PilotState
+	telemetry           *Telemetry
+	control             *Control
+	statusIndicator     *LedStatusIndicator
+	buttonPin           *rpio.Pin
+	buttonPressTime     time.Time
+	zeroSpeedTime       *time.Time
+	waypoints           *Waypoints
+	previousUpdateRoll  float32
+	previousUpdatePitch float32
 }
 
 func NewPilot() (*Pilot, error) {
@@ -112,9 +113,12 @@ func (pilot *Pilot) runWaitingForButton() {
 }
 
 func (pilot *Pilot) runWaitForLaunch() {
-	// TODO: Give it a few seconds to launch, or wait for x acceleration forward
-	Logger.Info("Launched, now flying")
-	pilot.state = flying
+	// Just adjust the ailerons to keep the plane level
+	if time.Since(pilot.buttonPressTime) < configuration.LaunchGlideDuration {
+		pilot.runGlideLevel()
+	} else {
+		pilot.state = flying
+	}
 }
 
 func (pilot *Pilot) runFlying() {
@@ -129,37 +133,7 @@ func (pilot *Pilot) runFlying() {
 		return
 	}
 
-	// Now adjust the ailerons to fly straight
-	// Just use a PID loop for now?
-	axes, err := pilot.telemetry.GetAxes()
-	if err != nil {
-		// I guess just log it?
-		Logger.Errorf("Pilot unable to get axes: %v", err)
-		time.Sleep(configuration.ErrorSleepDuration)
-		return
-	}
-	var leftAngle Degrees
-	leftAngle = axes.Roll * configuration.ProportionalRollMultiplier
-	rightAngle := -leftAngle
-
-	// TODO: Tune this
-	adjustment := (configuration.TargetPitch - axes.Pitch) * configuration.ProportionalPitchMultiplier
-	if adjustment > configuration.MaxServoPitchAdjustment {
-		adjustment = configuration.MaxServoPitchAdjustment
-	} else if adjustment < -configuration.MaxServoPitchAdjustment {
-		adjustment = -configuration.MaxServoPitchAdjustment
-	}
-	leftAngle += adjustment
-	rightAngle += adjustment
-
-	if leftAngle < -configuration.MaxServoAngleOffset {
-		leftAngle = -configuration.MaxServoAngleOffset
-	} else if leftAngle < -configuration.MaxServoAngleOffset {
-		leftAngle = configuration.MaxServoAngleOffset
-	}
-
-	pilot.control.SetLeft(90 + leftAngle)
-	pilot.control.SetRight(90 + rightAngle)
+	// TODO: Fly to waypoints
 }
 
 func (pilot *Pilot) runLanded() {
@@ -175,8 +149,11 @@ func (pilot *Pilot) runLanded() {
 	}
 }
 
-// Just adjust the ailerons to fly level. Good for testing.
+// Just adjust the ailerons to fly roll level. Good for testing or
+// immediately after launch.
 func (pilot *Pilot) runGlideLevel() {
+	// Now adjust the ailerons to fly straight
+	// Just use a P loop for now?
 	axes, err := pilot.telemetry.GetAxes()
 	if err != nil {
 		// I guess just log it?
@@ -184,21 +161,32 @@ func (pilot *Pilot) runGlideLevel() {
 		time.Sleep(configuration.ErrorSleepDuration)
 		return
 	}
+	leftAngle := axes.Roll * configuration.ProportionalRollMultiplier
+	rightAngle := -leftAngle
+
+	adjustment := (configuration.TargetPitch - axes.Pitch) * configuration.ProportionalPitchMultiplier
+	adjustment = clamp(adjustment, -configuration.MaxServoPitchAdjustment, configuration.MaxServoPitchAdjustment)
+
+	leftAngle += adjustment
+	rightAngle -= adjustment
+
+	leftAngle = clamp(leftAngle, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
+	rightAngle = clamp(rightAngle, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
+
 	// Let's only move the servo when it's changed a little so that the
 	// servo isn't freaking out due to noisy sensors
-	if math.Abs(float64(pilot.previousUpdateR-axes.Roll)) < 2 {
+	difference := math.Abs(float64(pilot.previousUpdateRoll - axes.Roll))
+	difference += math.Abs(float64(pilot.previousUpdatePitch - axes.Pitch))
+	if difference < 4 {
 		return
 	}
-	pilot.previousUpdateR = axes.Roll
-	angle := 90 + axes.Roll*1.5
-	if angle > 90+45 {
-		angle = 90 + 45
-	} else if angle < 90-45 {
-		angle = 90 - 45
-	}
-	angle = roundToUnit(angle, 3)
-	pilot.control.SetLeft(angle)
-	pilot.control.SetRight(-angle)
+
+	pilot.previousUpdateRoll = axes.Roll
+	pilot.previousUpdatePitch = axes.Pitch
+	leftAngle = roundToUnit(leftAngle, 3)
+	rightAngle = roundToUnit(rightAngle, 3)
+	pilot.control.SetLeft(90 + leftAngle)
+	pilot.control.SetRight(90 + rightAngle)
 }
 
 func roundToUnit(x, unit float32) float32 {
@@ -206,4 +194,14 @@ func roundToUnit(x, unit float32) float32 {
 	bigUnit := float64(unit)
 	value := math.Round(bigX/bigUnit) * bigUnit
 	return float32(value)
+}
+
+func clamp(value, minimum, maximum float32) float32 {
+	if value < minimum {
+		return minimum
+	}
+	if value > maximum {
+		return maximum
+	}
+	return value
 }

@@ -35,8 +35,8 @@ LandingPointAltitude_m = 1556.0
 LandingPointAltitudeOffset_m = 1000.0
 # The preferred pitch for gliding
 TargetPitch_d = -10.0  # TODO: Tune this
-# The max we're allowed to ajust the servos to adjust the pitch
-MaxServoPitchAdjustment_d = 25 # TODO: Tune this
+# The max we're allowed to adjust the servos to adjust the pitch
+MaxServoPitchAdjustment_d = 25.0 # TODO: Tune this
 
  # **** Pins ****
 ButtonPin = 24
