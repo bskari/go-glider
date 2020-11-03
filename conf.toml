@@ -24,7 +24,7 @@ MagnetometerXMin_t = -24.727
 MagnetometerYMax_t = 21.364
 MagnetometerYMin_t = -22.182
 # Compass declination in Boulder
-Declinaton_d = 8.1
+Declination_d = 8.1
 
 # **** Pilot ****
 # The amount of time to sleep per iteration
@@ -38,7 +38,8 @@ LandingPointAltitudeOffset_m = 1000.0
 # The preferred pitch for gliding
 TargetPitch_d = -10.0  # TODO: Tune this
 # The max we're allowed to adjust the servos to adjust the pitch
-MaxServoPitchAdjustment_d = 25.0 # TODO: Tune this
+MaxServoPitchAdjustment_d = 25.0  # TODO: Tune this
+MaxServoAngleOffset_d = 45.0
 
  # **** Pins ****
 ButtonPin = 24
