@@ -18,7 +18,19 @@ func testServos() {
 		fmt.Println("Not a Pi")
 		return
 	}
-	controlTest()
+	fmt.Print("Enter c for control, m for manual: ")
+	reader := bufio.NewReader(os.Stdin)
+	line, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Printf("Bad line: %v\n", err)
+	}
+	if line == "c\n" {
+		controlTest()
+	} else if line == "m\n" {
+		manualTest()
+	} else {
+		fmt.Println("Invalid option")
+	}
 }
 
 func controlTest() {

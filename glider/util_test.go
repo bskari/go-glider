@@ -75,12 +75,11 @@ func TestConfigurationValues(t *testing.T) {
 		t.Errorf("TOML file has %v values but tomlConfiguration_t has %v", valueCount, tomlConfigurationType.NumField())
 	}
 
-
 	configuration := configuration_t{}
 	configurationType := reflect.TypeOf(configuration)
 	// We average the hard offsets for the magnetometer, so there are
 	// two fewer values
-	if configurationType.NumField() != valueCount - 2 {
+	if configurationType.NumField() != valueCount-2 {
 		t.Errorf("TOML file has %v values but configuration_t has %v", valueCount, configurationType.NumField())
 	}
 }

@@ -17,30 +17,33 @@ const US_PER_DEGREE = 800 / 90
 const ZERO_US = 1430 - US_PER_DEGREE*90
 
 type Control struct {
-	left  rpio.Pin
-	right rpio.Pin
+	left  *rpio.Pin
+	right *rpio.Pin
 }
 
 func NewControl() *Control {
+	tempLeft := rpio.Pin(configuration.LeftServoPin)
+	tempRight := rpio.Pin(configuration.RightServoPin)
+	tempLeft.Pwm()
+	tempRight.Pwm()
+	tempLeft.Freq(HERTZ * MULTIPLIER)
+	tempRight.Freq(HERTZ * MULTIPLIER)
+	tempLeft.DutyCycle(1000, MULTIPLIER)
 	control := Control{
-		left:  rpio.Pin(configuration.LeftServoPin),
-		right: rpio.Pin(configuration.RightServoPin),
+		left:  &tempLeft,
+		right: &tempRight,
 	}
-	control.left.Mode(rpio.Pwm)
-	control.right.Mode(rpio.Pwm)
 	// Param freq should be in range 4688Hz - 19.2MHz to prevent
 	// unexpected behavior
-	control.left.Freq(HERTZ * MULTIPLIER)
-	control.right.Freq(HERTZ * MULTIPLIER)
 	return &control
 }
 
 func (control *Control) SetLeft(angle Degrees) error {
-	return control.set(&control.left, angle)
+	return control.set(control.left, angle)
 }
 
 func (control *Control) SetRight(angle Degrees) error {
-	return control.set(&control.right, angle)
+	return control.set(control.right, angle)
 }
 
 func (control *Control) set(pin *rpio.Pin, angle Degrees) error {
