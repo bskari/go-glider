@@ -93,6 +93,17 @@ func main() {
 	}
 	defer rpio.Close()
 
+	// Load configuration
+	file, err := os.Open("conf.toml")
+	if err != nil {
+		panic("Couldn't open configuration file")
+	}
+	defer file.Close()
+	err = glider.LoadConfiguration(file)
+	if err != nil {
+		panic(err)
+	}
+
 	if *dumpSensorsPtr {
 		dumpSensors()
 	} else if *glidePtr {
@@ -108,17 +119,6 @@ func runGlide() {
 	telemetry, err := glider.NewTelemetry()
 	if err != nil {
 		panic(fmt.Sprintf("Couldn't initialize telemetry: %v", err))
-	}
-
-	// Load configuration
-	file, err := os.Open("conf.json")
-	if err != nil {
-		panic("Couldn't open configuration file")
-	}
-	defer file.Close()
-	err = glider.LoadConfiguration(file)
-	if err != nil {
-		panic(err)
 	}
 
 	// Wait for the GPS to get a lock, so we can set the clock
