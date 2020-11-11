@@ -116,7 +116,7 @@ func NewTelemetry() (*Telemetry, error) {
 		// Prepare GPS
 		rawGps := serial.New()
 		rawGps.Verbose = false
-		err := rawGps.Open("/dev/ttyS0", 9600)
+		err := rawGps.Open(configuration.GpsTty, configuration.GpsBitRate)
 		if err != nil {
 			return nil, err
 		}

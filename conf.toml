@@ -25,6 +25,9 @@ MagnetometerYMax_t = 21.364
 MagnetometerYMin_t = -22.182
 # Compass declination in Boulder
 Declination_d = 8.1
+# GPS settings
+GpsTty = '/dev/ttyAMA0'
+GpsBitRate = 9600
 
 # **** Pilot ****
 # The amount of time to sleep per iteration

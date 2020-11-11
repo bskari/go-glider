@@ -171,6 +171,8 @@ type configuration_t struct {
 	MagnetometerXOffset_t       float32
 	MagnetometerYOffset_t       float32
 	Declination                 Degrees
+	GpsTty                      string
+	GpsBitRate                  int
 	IterationSleepTime          time.Duration
 	LandNoMoveDuration          time.Duration
 	LaunchGlideDuration         time.Duration
@@ -208,6 +210,8 @@ type tomlConfiguration_t struct {
 	MagnetometerYMax_t           float64
 	MagnetometerYMin_t           float64
 	Declination_d                float64
+	GpsTty                       string
+	GpsBitRate                   int64
 	IterationSleepTime_s         float64
 	LandNoMoveDuration_s         float64
 	LaunchGlideDuration_s        float64
@@ -265,6 +269,8 @@ func LoadConfiguration(configurationReader io.Reader) error {
 	configuration.MagnetometerXOffset_t = float32(tomlConfiguration.MagnetometerXMax_t + tomlConfiguration.MagnetometerXMin_t*0.5)
 	configuration.MagnetometerYOffset_t = float32(tomlConfiguration.MagnetometerYMax_t + tomlConfiguration.MagnetometerYMin_t*0.5)
 	configuration.Declination = float32(tomlConfiguration.Declination_d)
+	configuration.GpsTty = tomlConfiguration.GpsTty
+	configuration.GpsBitRate = int(tomlConfiguration.GpsBitRate)
 
 	configuration.IterationSleepTime = time.Duration(tomlConfiguration.IterationSleepTime_s * float64(time.Second))
 
