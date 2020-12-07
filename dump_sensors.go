@@ -51,12 +51,16 @@ func dumpSensors() {
 	// Set up the GPS
 	var gps *bufio.Reader
 	if glider.IsPi() {
-		config := serial.Config{Name: "/dev/ttyS0", Baud: 9600, ReadTimeout: time.Millisecond * 0}
-		gps_, err := serial.OpenPort(&config)
-		if err != nil {
-			panic(err)
+		serialPorts := []string{"/dev/ttyS0", "/dev/ttyACM0", "/dev/ttyAMA0"}
+		for _, serialPort := range serialPorts {
+			fmt.Printf("Trying to open GPS %s\n", serialPort)
+			config := serial.Config{Name: serialPort, Baud: 9600, ReadTimeout: time.Millisecond * 0}
+			gps_, err := serial.OpenPort(&config)
+			if err != nil {
+				continue
+			}
+			gps = bufio.NewReader(gps_)
 		}
-		gps = bufio.NewReader(gps_)
 	} else {
 		gps = bufio.NewReader(dummyReader{})
 	}
