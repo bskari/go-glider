@@ -178,6 +178,8 @@ type configuration_t struct {
 	LaunchGlideDuration         time.Duration
 	ProportionalRollMultiplier  float32
 	ProportionalPitchMultiplier float32
+	ProportionalTargetRollMultiplier float32
+	MaxTargetRoll Degrees
 	LandingPointAltitude        Meters
 	LandingPointAltitudeOffset  Meters
 	TargetPitch                 Degrees
@@ -217,6 +219,8 @@ type tomlConfiguration_t struct {
 	LaunchGlideDuration_s        float64
 	ProportionalRollMultiplier   float64
 	ProportionalPitchMultiplier  float64
+	ProportionalTargetRollMultiplier float64
+	MaxTargetRoll_d float64
 	LandingPointAltitude_m       float64
 	LandingPointAltitudeOffset_m float64
 	TargetPitch_d                float64
@@ -282,6 +286,8 @@ func LoadConfiguration(configurationReader io.Reader) error {
 	configuration.LaunchGlideDuration = time.Duration(tomlConfiguration.LaunchGlideDuration_s * float64(time.Second))
 	configuration.ProportionalRollMultiplier = float32(tomlConfiguration.ProportionalRollMultiplier)
 	configuration.ProportionalPitchMultiplier = float32(tomlConfiguration.ProportionalPitchMultiplier)
+	configuration.ProportionalTargetRollMultiplier = float32(tomlConfiguration.ProportionalTargetRollMultiplier)
+	configuration.MaxTargetRoll = Degrees(tomlConfiguration.MaxTargetRoll_d)
 	configuration.LandingPointAltitude = Meters(tomlConfiguration.LandingPointAltitude_m)
 	configuration.LandingPointAltitudeOffset = Meters(tomlConfiguration.LandingPointAltitudeOffset_m)
 	configuration.TargetPitch = Degrees(tomlConfiguration.TargetPitch_d)

@@ -157,11 +157,17 @@ func (pilot *Pilot) runGlideLevel() {
 	axes, err := pilot.telemetry.GetAxes()
 	if err != nil {
 		// I guess just log it?
-		Logger.Errorf("Pilot unable to get axes: %v", err)
+		Logger.Errorf("runGlideLevel unable to get axes: %v", err)
 		time.Sleep(configuration.ErrorSleepDuration)
 		return
 	}
-	leftAngle := axes.Roll * configuration.ProportionalRollMultiplier
+	position := pilot.telemetry.GetPosition()
+	if pilot.waypoints.Reached(position) {
+		pilot.waypoints.Next()
+	}
+	waypoint := pilot.waypoints.GetWaypoint()
+	targetRoll := getTargetRoll(axes.Yaw, position, waypoint)
+	leftAngle := targetRoll * configuration.ProportionalRollMultiplier
 	rightAngle := -leftAngle
 
 	adjustment := (configuration.TargetPitch - axes.Pitch) * configuration.ProportionalPitchMultiplier
@@ -189,6 +195,17 @@ func (pilot *Pilot) runGlideLevel() {
 	pilot.control.SetRight(90 + rightAngle)
 }
 
+func getTargetRoll(yaw Degrees, position, waypoint Point) Degrees {
+	goalHeading := Course(position, waypoint)
+	adjustHeading := GetAngleTo(yaw, goalHeading)
+	if GetTurnDirection(yaw, position, waypoint) == Left {
+		adjustHeading = -adjustHeading
+	}
+	targetRoll := adjustHeading * configuration.ProportionalTargetRollMultiplier
+	targetRoll = clamp(targetRoll, -configuration.MaxTargetRoll, configuration.MaxTargetRoll)
+	return targetRoll
+}
+
 func roundToUnit(x, unit float32) float32 {
 	bigX := float64(x)
 	bigUnit := float64(unit)
@@ -197,6 +214,12 @@ func roundToUnit(x, unit float32) float32 {
 }
 
 func clamp(value, minimum, maximum float32) float32 {
+	if minimum > maximum {
+		temp := minimum
+		minimum = maximum
+		maximum = temp
+		Logger.Errorf("clamp minimum and maximum were reversed: %v %v", minimum, maximum)
+	}
 	if value < minimum {
 		return minimum
 	}
