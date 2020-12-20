@@ -34,7 +34,6 @@ GpsBitRate = 9600
 IterationSleepTime_s = 0.2
 LandNoMoveDuration_s = 5.0
 LaunchGlideDuration_s = 5.0
-<<<<<<< Updated upstream
 ProportionalRollMultiplier = 1.5  # TODO: Tune this
 ProportionalPitchMultiplier = 1.5  # TODO: Tune this
 # Bank X * ProportionalPitchMultiplier if we're X degrees off
