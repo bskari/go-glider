@@ -9,14 +9,27 @@ import (
 
 type PilotState uint8
 
+// These are defined in reverse order, so that blinking the status makes
+// more sense. Fewer blink patterns indicate we're done initializing.
 const (
-	initializing PilotState = iota + 1
-	waitingForButton
-	waitingForLaunch
+	landed PilotState = iota
 	flying
-	landed
+	waitingForLaunch
+	waitingForButton
+	initializing
 	testMode
 )
+
+func (ps PilotState) String() string {
+	return []string{
+		"landed",
+		"flying",
+		"waitingForLaunch",
+		"waitingForButton",
+		"initializing",
+		"testMode",
+	}[ps]
+}
 
 type Pilot struct {
 	state               PilotState
@@ -58,8 +71,13 @@ func NewPilot() (*Pilot, error) {
 
 // Run the local glide test, e.g. when throwing the plane down a hill
 func (pilot *Pilot) RunGlideTestForever() {
-	Logger.Info("Waiting for GPS lock")
+	previousState := pilot.state
+	Logger.Infof("Starting RunGlideTestForever in state %s", pilot.state)
 	for {
+		if previousState != pilot.state {
+			Logger.Infof("RunGlideTestForever new state %s", pilot.state)
+			previousState = pilot.state
+		}
 		pilot.statusIndicator.BlinkState(uint8(pilot.state))
 
 		// Parse all queued messages
@@ -170,11 +188,13 @@ func (pilot *Pilot) runGlideLevel() {
 	leftAngle := targetRoll * configuration.ProportionalRollMultiplier
 	rightAngle := -leftAngle
 
+	//fmt.Printf("pitch %v\n", axes.Pitch)
 	adjustment := (configuration.TargetPitch - axes.Pitch) * configuration.ProportionalPitchMultiplier
 	adjustment = clamp(adjustment, -configuration.MaxServoPitchAdjustment, configuration.MaxServoPitchAdjustment)
 
-	leftAngle += adjustment
-	rightAngle -= adjustment
+	//fmt.Printf("pitch adjustment %v\n", adjustment)
+	leftAngle -= adjustment
+	rightAngle += adjustment
 
 	leftAngle = clamp(leftAngle, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
 	rightAngle = clamp(rightAngle, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
@@ -184,13 +204,16 @@ func (pilot *Pilot) runGlideLevel() {
 	difference := math.Abs(float64(pilot.previousUpdateRoll - axes.Roll))
 	difference += math.Abs(float64(pilot.previousUpdatePitch - axes.Pitch))
 	if difference < 4 {
+		//fmt.Println("")
 		return
 	}
 
+	//fmt.Printf("leftAngle:%v, rightAngle:%v\n", leftAngle, rightAngle)
 	pilot.previousUpdateRoll = axes.Roll
 	pilot.previousUpdatePitch = axes.Pitch
 	leftAngle = roundToUnit(leftAngle, 3)
 	rightAngle = roundToUnit(rightAngle, 3)
+	//fmt.Printf("SetLeft:%v, SetRight:%v\n\n", 90+leftAngle, 90+rightAngle)
 	pilot.control.SetLeft(90 + leftAngle)
 	pilot.control.SetRight(90 + rightAngle)
 }

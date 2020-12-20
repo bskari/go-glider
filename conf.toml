@@ -31,11 +31,12 @@ GpsBitRate = 9600
 
 # **** Pilot ****
 # The amount of time to sleep per iteration
-IterationSleepTime_s = 0.05
+IterationSleepTime_s = 0.2
 LandNoMoveDuration_s = 5.0
 LaunchGlideDuration_s = 5.0
-ProportionalRollMultiplier = 0.5  # TODO: Tune this
-ProportionalPitchMultiplier = 0.3  # TODO: Tune this
+<<<<<<< Updated upstream
+ProportionalRollMultiplier = 1.5  # TODO: Tune this
+ProportionalPitchMultiplier = 1.5  # TODO: Tune this
 # Bank X * ProportionalPitchMultiplier if we're X degrees off
 ProportionalTargetRollMultiplier = 0.5  # TODO: Tune this
 MaxTargetRoll_d = 15.0  # TODO: Tune this
@@ -48,7 +49,7 @@ MaxServoPitchAdjustment_d = 25.0  # TODO: Tune this
 MaxServoAngleOffset_d = 45.0
 # Microseconds settings for center servos
 LeftServoCenter_us = 1430
-RightServoCenter_us = 1570
+RightServoCenter_us = 1430
 
  # **** Pins ****
 ButtonPin = 24
