@@ -160,37 +160,37 @@ func ToCoordinateRadians(coordinate Coordinate) float64 {
 }
 
 type configuration_t struct {
-	DistanceFormula             distanceFormula_t
-	BearingFormula              bearingFormula_t
-	WaypointReachedDistance     Meters
-	WaypointInRangeDistance     Meters
-	DefaultWaypointLatitude     Coordinate
-	DefaultWaypointLongitude    Coordinate
-	PitchOffset                 Degrees
-	RollOffset                  Degrees
-	MagnetometerXOffset_t       float32
-	MagnetometerYOffset_t       float32
-	Declination                 Degrees
-	GpsTty                      string
-	GpsBitRate                  int
-	IterationSleepTime          time.Duration
-	LandNoMoveDuration          time.Duration
-	LaunchGlideDuration         time.Duration
-	ProportionalRollMultiplier  float32
-	ProportionalPitchMultiplier float32
+	DistanceFormula                  distanceFormula_t
+	BearingFormula                   bearingFormula_t
+	WaypointReachedDistance          Meters
+	WaypointInRangeDistance          Meters
+	DefaultWaypointLatitude          Coordinate
+	DefaultWaypointLongitude         Coordinate
+	PitchOffset                      Degrees
+	RollOffset                       Degrees
+	MagnetometerXOffset_t            float32
+	MagnetometerYOffset_t            float32
+	Declination                      Degrees
+	GpsTty                           string
+	GpsBitRate                       int
+	IterationSleepTime               time.Duration
+	LandNoMoveDuration               time.Duration
+	LaunchGlideDuration              time.Duration
+	ProportionalRollMultiplier       float32
+	ProportionalPitchMultiplier      float32
 	ProportionalTargetRollMultiplier float32
-	MaxTargetRoll Degrees
-	LandingPointAltitude        Meters
-	LandingPointAltitudeOffset  Meters
-	TargetPitch                 Degrees
-	MaxServoPitchAdjustment     Degrees
-	MaxServoAngleOffset         Degrees
-	LeftServoCenter_us          uint16
-	RightServoCenter_us         uint16
-	ButtonPin                   uint8
-	LeftServoPin                uint8
-	RightServoPin               uint8
-	ErrorSleepDuration          time.Duration
+	MaxTargetRoll                    Degrees
+	LandingPointAltitude             Meters
+	LandingPointAltitudeOffset       Meters
+	TargetPitch                      Degrees
+	MaxServoPitchAdjustment          Degrees
+	MaxServoAngleOffset              Degrees
+	LeftServoCenter_us               uint16
+	RightServoCenter_us              uint16
+	ButtonPin                        uint8
+	LeftServoPin                     uint8
+	RightServoPin                    uint8
+	ErrorSleepDuration               time.Duration
 }
 
 var configuration configuration_t
@@ -200,38 +200,38 @@ type tomlConfiguration_t struct {
 	// or "cachedEquirectangular"
 	DistanceFormula string
 	// One of "equirectangular", "cachedEquirectangular"
-	BearingFormula               string
-	WaypointReachedDistance_m    float64
-	WaypointInRangeDistance_m    float64
-	DefaultWaypointLatitude      float64
-	DefaultWaypointLongitude     float64
-	PitchOffset_d                float64
-	RollOffset_d                 float64
-	MagnetometerXMax_t           float64
-	MagnetometerXMin_t           float64
-	MagnetometerYMax_t           float64
-	MagnetometerYMin_t           float64
-	Declination_d                float64
-	GpsTty                       string
-	GpsBitRate                   int64
-	IterationSleepTime_s         float64
-	LandNoMoveDuration_s         float64
-	LaunchGlideDuration_s        float64
-	ProportionalRollMultiplier   float64
-	ProportionalPitchMultiplier  float64
+	BearingFormula                   string
+	WaypointReachedDistance_m        float64
+	WaypointInRangeDistance_m        float64
+	DefaultWaypointLatitude          float64
+	DefaultWaypointLongitude         float64
+	PitchOffset_d                    float64
+	RollOffset_d                     float64
+	MagnetometerXMax_t               float64
+	MagnetometerXMin_t               float64
+	MagnetometerYMax_t               float64
+	MagnetometerYMin_t               float64
+	Declination_d                    float64
+	GpsTty                           string
+	GpsBitRate                       int64
+	IterationSleepTime_s             float64
+	LandNoMoveDuration_s             float64
+	LaunchGlideDuration_s            float64
+	ProportionalRollMultiplier       float64
+	ProportionalPitchMultiplier      float64
 	ProportionalTargetRollMultiplier float64
-	MaxTargetRoll_d float64
-	LandingPointAltitude_m       float64
-	LandingPointAltitudeOffset_m float64
-	TargetPitch_d                float64
-	MaxServoPitchAdjustment_d    float64
-	MaxServoAngleOffset_d        float64
-	LeftServoCenter_us           int64
-	RightServoCenter_us          int64
-	ButtonPin                    int64
-	LeftServoPin                 int64
-	RightServoPin                int64
-	ErrorSleepDuration_s         float64
+	MaxTargetRoll_d                  float64
+	LandingPointAltitude_m           float64
+	LandingPointAltitudeOffset_m     float64
+	TargetPitch_d                    float64
+	MaxServoPitchAdjustment_d        float64
+	MaxServoAngleOffset_d            float64
+	LeftServoCenter_us               int64
+	RightServoCenter_us              int64
+	ButtonPin                        int64
+	LeftServoPin                     int64
+	RightServoPin                    int64
+	ErrorSleepDuration_s             float64
 }
 
 func LoadConfiguration(configurationReader io.Reader) error {
