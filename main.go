@@ -18,15 +18,16 @@ import (
 // 2 = 5V, connect to power +
 // 39 = ground, connect to power -
 // GPS connections:
-// 1 = 3.3V, connect to GPS VCC
+// 4 = 5V, connect to GPS VCC
 // 6 = ground, connect to GPS ground
 // 8 = TXD, connect to GPS RXD
 // 10 = RXD, connect to GPS TXD
-// Accelerometer, LSM303DLHC connections:
-// 4 = 5V, connect to accelerometer VIN
-// 9 = ground, connect to accelerometer ground
-// 5 = SCL, connect to accelerometer SCL
+// Sparkfun 9DOF stick; ADXL345 accelerometer, HMC5883L magnetometer,
+// PS-ITG-3200 gyroscope connections:
+// 1 = 3.3V, connect to accelerometer VIN
 // 3 = SDA, connect to accelerometer SDA
+// 5 = SCL, connect to accelerometer SCL
+// 9 = ground, connect to accelerometer ground
 // Servo connections:
 // 32 (orange) = BCM 12 / PWM0 = left servo yellow wire
 // 33 (yellow) = BCM 13 / PWM1 = right servo yellow wire
@@ -38,10 +39,10 @@ import (
 // 20 = ground, connect to button
 
 // In pin order:
-// 1 = 3.3V, connect to GPS VCC
+// 1 = 3.3V, connect to accelerometer VCC
 // 2 = 5V, connect to Pi power +
 // 3 = SDA, connect to accelerometer SDA
-// 4 = 5V, connect to accelerometer VIN
+// 4 = 5V, connect to GPS VIN
 // 5 = SCL, connect to accelerometer SCL
 // 6 = ground, connect to GPS ground
 // 8 = TXD, connect to GPS RXD
@@ -86,12 +87,14 @@ func main() {
 
 	os.Mkdir("logs", 0655)
 
-	err := rpio.Open()
-	if err != nil {
-		fmt.Printf("Failed to initialize RPIO: %v\n", err)
-		return
+	if glider.IsPi() {
+		err := rpio.Open()
+		if err != nil {
+			fmt.Printf("Failed to initialize RPIO: %v\n", err)
+			return
+		}
+		defer rpio.Close()
 	}
-	defer rpio.Close()
 
 	// Load configuration
 	file, err := os.Open("conf.toml")

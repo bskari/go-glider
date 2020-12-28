@@ -48,27 +48,27 @@ func (reader dummyReader) Read(buffer []byte) (n int, err error) {
 
 func dumpSensors() {
 	/*
-	// Set up the GPS
-	var gps *bufio.Reader
-	if glider.IsPi() {
-		serialPorts := []string{"/dev/ttyS0", "/dev/ttyACM0", "/dev/ttyAMA0"}
-		for _, serialPort := range serialPorts {
-			fmt.Printf("Trying to open GPS %s\n", serialPort)
-			config := serial.Config{Name: serialPort, Baud: 9600, ReadTimeout: time.Millisecond * 0}
-			gps_, err := serial.OpenPort(&config)
-			if err != nil {
-				continue
+		// Set up the GPS
+		var gps *bufio.Reader
+		if glider.IsPi() {
+			serialPorts := []string{"/dev/ttyS0", "/dev/ttyACM0", "/dev/ttyAMA0"}
+			for _, serialPort := range serialPorts {
+				fmt.Printf("Trying to open GPS %s\n", serialPort)
+				config := serial.Config{Name: serialPort, Baud: 9600, ReadTimeout: time.Millisecond * 0}
+				gps_, err := serial.OpenPort(&config)
+				if err != nil {
+					continue
+				}
+				gps = bufio.NewReader(gps_)
 			}
-			gps = bufio.NewReader(gps_)
+		} else {
+			gps = bufio.NewReader(dummyReader{})
 		}
-	} else {
-		gps = bufio.NewReader(dummyReader{})
-	}
 	*/
 
 	// Set up accelerometer and magnetometer
 	var accelerometer *glider.Adxl345
-	//var magnetometer *glider.Adxl345 = nil
+	var magnetometer *glider.Hmc5883L
 	if glider.IsPi() {
 		// Make sure periph is initialized.
 		if _, err := host.Init(); err != nil {
@@ -86,8 +86,14 @@ func dumpSensors() {
 		if err != nil {
 			panic(err)
 		}
+
+		magnetometer, err = glider.NewHmc5883L(bus)
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		accelerometer = nil
+		magnetometer = nil
 	}
 
 	// Set up button
@@ -126,14 +132,12 @@ func dumpSensors() {
 	xMaxAccelerometerRaw := int16(-math.MaxInt16)
 	yMaxAccelerometerRaw := int16(-math.MaxInt16)
 	zMaxAccelerometerRaw := int16(-math.MaxInt16)
-	/*
 	xMinFlux := int16(math.MaxInt16)
 	yMinFlux := int16(math.MaxInt16)
 	zMinFlux := int16(math.MaxInt16)
 	xMaxFlux := int16(math.MinInt16)
 	yMaxFlux := int16(math.MinInt16)
 	zMaxFlux := int16(math.MinInt16)
-	*/
 
 	// Let's also test out the LED status indicator
 	statusIndicator := glider.NewLedStatusIndicator(3)
@@ -165,25 +169,25 @@ loop:
 			writer.Line = 0
 
 			/*
-			// Read from the GPS
-			text, err := gps.ReadString('\n')
-			if err != nil {
-				panic(err)
-			}
-			if text != "" && len(text) > 6 {
-				gpsMessageTypeToMessage[text[:6]] = text
-			}
+				// Read from the GPS
+				text, err := gps.ReadString('\n')
+				if err != nil {
+					panic(err)
+				}
+				if text != "" && len(text) > 6 {
+					gpsMessageTypeToMessage[text[:6]] = text
+				}
 
-			// Output the NMEA sentences
-			writer.WriteLine("=== GPS ===")
-			gpsTypes := make([]string, 0, len(gpsMessageTypeToMessage))
-			for type_ := range gpsMessageTypeToMessage {
-				gpsTypes = append(gpsTypes, type_)
-			}
-			sort.Strings(gpsTypes)
-			for _, type_ := range gpsTypes {
-				writer.IndentLine(gpsMessageTypeToMessage[type_])
-			}
+				// Output the NMEA sentences
+				writer.WriteLine("=== GPS ===")
+				gpsTypes := make([]string, 0, len(gpsMessageTypeToMessage))
+				for type_ := range gpsMessageTypeToMessage {
+					gpsTypes = append(gpsTypes, type_)
+				}
+				sort.Strings(gpsTypes)
+				for _, type_ := range gpsTypes {
+					writer.IndentLine(gpsMessageTypeToMessage[type_])
+				}
 			*/
 
 			// Output accelerometer readings
@@ -203,7 +207,7 @@ loop:
 				randRange := int64(physic.MetrePerSecond) / 5
 				x = physic.Speed(offset + rand.Int63n(randRange))
 				y = physic.Speed(offset + rand.Int63n(randRange))
-				z = physic.Speed(offset+rand.Int63n(randRange) + int64(9.8 * float64(physic.MetrePerSecond)))
+				z = physic.Speed(offset + rand.Int63n(randRange) + int64(9.8*float64(physic.MetrePerSecond)))
 				xRawA = int16(-10 + rand.Intn(21))
 				yRawA = int16(-10 + rand.Intn(21))
 				zRawA = int16(90 + rand.Intn(21))
@@ -242,24 +246,14 @@ loop:
 
 			writer.IndentLine(fmt.Sprintf("pitch: %5.1f   roll: %5.1f", pitch_d, roll_d))
 
-			/*
 			// Output magnetometer readings
 			var xRawM, yRawM, zRawM int16
 			if magnetometer != nil {
-				x, y, z, err = accelerometer.Sense()
-				if err != nil {
-					panic(err)
-				}
 				xRawM, yRawM, zRawM, err = magnetometer.SenseRaw()
 				if err != nil {
 					panic(err)
 				}
 			} else {
-				offset := -int64(physic.EarthGravity) / 10
-				randRange := int64(physic.EarthGravity) / 5
-				x = physic.Speed(offset + rand.Int63n(randRange))
-				y = physic.Speed(offset + rand.Int63n(randRange))
-				z = physic.Speed(offset+rand.Int63n(randRange)) + physic.EarthGravity
 				xRawM = int16(-10 + rand.Intn(21))
 				yRawM = int16(-10 + rand.Intn(21))
 				zRawM = int16(-10 + rand.Intn(21))
@@ -285,7 +279,6 @@ loop:
 			writer.IndentLine(fmt.Sprintf("y: %v, min: %v, max: %v", yRawM, yMinFlux, yMaxFlux))
 			writer.IndentLine(fmt.Sprintf("z: %v, min: %v, max: %v", zRawM, zMinFlux, zMaxFlux))
 			writer.IndentLine(fmt.Sprintf("heading: %v", heading_d))
-			*/
 
 			// Output button state
 			var buttonState rpio.State
@@ -304,20 +297,24 @@ loop:
 			writer.IndentLine(fmt.Sprintf("%v", buttonStateString))
 
 			/*
-			// Output temperature
-			var value_c float32
-			if magnetometer != nil {
-				temperature, err := magnetometer.SenseRelativeTemperature()
-				if err != nil {
-					panic(err)
+				// Output temperature
+				var value_c float32
+				if magnetometer != nil {
+					temperature, err := magnetometer.SenseRelativeTemperature()
+					if err != nil {
+						panic(err)
+					}
+					value_c = float32(temperature-physic.ZeroCelsius) / float32(physic.Celsius)
 				}
-				value_c = float32(temperature-physic.ZeroCelsius) / float32(physic.Celsius)
-			}
-			writer.WriteLine("=== Temperature ===")
-			writer.IndentLine(fmt.Sprintf("%v", value_c))
+				writer.WriteLine("=== Temperature ===")
+				writer.IndentLine(fmt.Sprintf("%v", value_c))
 			*/
 
+			now := time.Now()
+			writer.WriteLine(fmt.Sprintf("%v", now))
 			termbox.Flush()
+			time.Sleep(250 * time.Millisecond)
+
 		}
 	}
 }

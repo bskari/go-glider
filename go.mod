@@ -1,6 +1,6 @@
 module github.com/bskari/go-glider
 
-go 1.11
+go 1.13
 
 require (
 	github.com/BurntSushi/toml v0.3.1
@@ -21,5 +21,5 @@ require (
 	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
-	periph.io/x/periph v3.6.4+incompatible
+	periph.io/x/periph v3.6.6+incompatible
 )
