@@ -9,6 +9,7 @@ import (
 	//"github.com/tarm/serial"
 	"math"
 	"math/rand"
+	"os"
 	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/host"
@@ -77,20 +78,14 @@ func dumpSensors() {
 
 		// Open a connection, using I²C as an example:
 		bus, err := i2creg.Open("")
-		if err != nil {
-			panic(err)
-		}
+		check(err)
 		defer bus.Close()
 
 		accelerometer, err = glider.NewAdxl345(bus)
-		if err != nil {
-			panic(err)
-		}
+		check(err)
 
 		magnetometer, err = glider.NewHmc5883L(bus)
-		if err != nil {
-			panic(err)
-		}
+		check(err)
 	} else {
 		accelerometer = nil
 		magnetometer = nil
@@ -107,9 +102,7 @@ func dumpSensors() {
 
 	// Set up display
 	err := termbox.Init()
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 	defer termbox.Close()
 
 	eventQueue := make(chan termbox.Event)
@@ -171,9 +164,7 @@ loop:
 			/*
 				// Read from the GPS
 				text, err := gps.ReadString('\n')
-				if err != nil {
-					panic(err)
-				}
+				check(err)
 				if text != "" && len(text) > 6 {
 					gpsMessageTypeToMessage[text[:6]] = text
 				}
@@ -195,13 +186,9 @@ loop:
 			var xRawA, yRawA, zRawA int16
 			if accelerometer != nil {
 				x, y, z, err = accelerometer.Sense()
-				if err != nil {
-					panic(err)
-				}
+				check(err)
 				xRawA, yRawA, zRawA, err = accelerometer.SenseRaw()
-				if err != nil {
-					panic(err)
-				}
+				check(err)
 			} else {
 				offset := -int64(physic.MetrePerSecond) / 10
 				randRange := int64(physic.MetrePerSecond) / 5
@@ -214,7 +201,7 @@ loop:
 			}
 			x2 := int32(xRawA) * int32(xRawA)
 			z2 := int32(zRawA) * int32(zRawA)
-			pitch_r := math.Atan(float64(yRawA) / math.Sqrt(float64(x2+z2)))
+			pitch_r := math.Atan(float64(-yRawA) / math.Sqrt(float64(x2+z2)))
 			roll_r := -math.Atan2(float64(xRawA), float64(zRawA))
 			pitch_d := glider.ToDegrees(float32(pitch_r))
 			roll_d := glider.ToDegrees(float32(roll_r))
@@ -250,9 +237,7 @@ loop:
 			var xRawM, yRawM, zRawM int16
 			if magnetometer != nil {
 				xRawM, yRawM, zRawM, err = magnetometer.SenseRaw()
-				if err != nil {
-					panic(err)
-				}
+				check(err)
 			} else {
 				xRawM = int16(-10 + rand.Intn(21))
 				yRawM = int16(-10 + rand.Intn(21))
@@ -265,8 +250,11 @@ loop:
 			yMaxFlux = max(yRawM, yMaxFlux)
 			zMaxFlux = max(zRawM, zMaxFlux)
 
-			xHorizontal := float64(xRawM)*math.Cos(pitch_r) + float64(yRawM)*math.Sin(roll_r)*math.Sin(pitch_r) - float64(zRawM)*math.Cos(roll_r)*math.Sin(pitch_r)
-			yHorizontal := float64(yRawM)*math.Cos(roll_r) + float64(zRawM)*math.Sin(roll_r)
+			xM := xRawM - (-518 + 625)
+			yM := yRawM - (-576 + 559)
+			zM := zRawM - (-528 + 565)
+			xHorizontal := float64(xM)*math.Cos(pitch_r) + float64(yM)*math.Sin(roll_r)*math.Sin(pitch_r) - float64(zM)*math.Cos(roll_r)*math.Sin(pitch_r)
+			yHorizontal := float64(yM)*math.Cos(roll_r) + float64(zM)*math.Sin(roll_r)
 			heading_d := glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))
 			// The magnetometer is mounted rotated 180 degrees, so rotate it
 			heading_d = heading_d + 180
@@ -301,9 +289,7 @@ loop:
 				var value_c float32
 				if magnetometer != nil {
 					temperature, err := magnetometer.SenseRelativeTemperature()
-					if err != nil {
-						panic(err)
-					}
+					check(err)
 					value_c = float32(temperature-physic.ZeroCelsius) / float32(physic.Celsius)
 				}
 				writer.WriteLine("=== Temperature ===")
@@ -314,9 +300,27 @@ loop:
 			writer.WriteLine(fmt.Sprintf("%v", now))
 			termbox.Flush()
 			time.Sleep(250 * time.Millisecond)
-
 		}
 	}
+	file, err := os.Create("readings.txt")
+	check(err)
+	defer file.Close()
+	_, err = file.WriteString("accelerometer\n")
+	check(err)
+	_, err = file.WriteString(fmt.Sprintf("x max:%v min:%v\n", xMinAccelerometerRaw, xMaxAccelerometerRaw))
+	check(err)
+	_, err = file.WriteString(fmt.Sprintf("y max:%v min:%v\n", yMinAccelerometerRaw, yMaxAccelerometerRaw))
+	check(err)
+	_, err = file.WriteString(fmt.Sprintf("z max:%v min:%v\n", zMinAccelerometerRaw, zMaxAccelerometerRaw))
+	check(err)
+	_, err = file.WriteString("magnetometer\n")
+	check(err)
+	_, err = file.WriteString(fmt.Sprintf("x max:%v min:%v\n", xMinFlux, xMaxFlux))
+	check(err)
+	_, err = file.WriteString(fmt.Sprintf("y max:%v min:%v\n", yMinFlux, yMaxFlux))
+	check(err)
+	_, err = file.WriteString(fmt.Sprintf("z max:%v min:%v\n", zMinFlux, zMaxFlux))
+	check(err)
 }
 
 type StringWriter struct {
@@ -348,4 +352,10 @@ func max(a, b int16) int16 {
 		return a
 	}
 	return b
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
