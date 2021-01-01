@@ -198,7 +198,7 @@ loop:
 			}
 			x2 := int32(xRawA) * int32(xRawA)
 			z2 := int32(zRawA) * int32(zRawA)
-			pitch_r := math.Atan(float64(-yRawA) / math.Sqrt(float64(x2+z2)))
+			pitch_r := math.Atan(float64(yRawA) / math.Sqrt(float64(x2+z2)))
 			roll_r := -math.Atan2(float64(xRawA), float64(zRawA))
 			pitch_d := glider.ToDegrees(float32(pitch_r))
 			roll_d := glider.ToDegrees(float32(roll_r))
@@ -247,10 +247,10 @@ loop:
 			yMaxFlux = max(yRawM, yMaxFlux)
 			zMaxFlux = max(zRawM, zMaxFlux)
 
-			xM := xRawM - (-518 + 625)
-			yM := yRawM - (-576 + 559)
-			zM := zRawM - (-528 + 565)
-			xHorizontal := float64(xM)*math.Cos(pitch_r) + float64(yM)*math.Sin(roll_r)*math.Sin(pitch_r) - float64(zM)*math.Cos(roll_r)*math.Sin(pitch_r)
+			xM := xRawM - (-490 + 712)
+			yM := yRawM - (-569 + 601)
+			zM := zRawM - (-704 + 435)
+			xHorizontal := float64(xM)*math.Cos(-pitch_r) + float64(yM)*math.Sin(roll_r)*math.Sin(-pitch_r) - float64(zM)*math.Cos(roll_r)*math.Sin(-pitch_r)
 			yHorizontal := float64(yM)*math.Cos(roll_r) + float64(zM)*math.Sin(roll_r)
 			heading_d := glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))
 			// The magnetometer is mounted rotated 180 degrees, so rotate it
@@ -263,7 +263,12 @@ loop:
 			writer.IndentLine(fmt.Sprintf("x: %v, min: %v, max: %v", xRawM, xMinFlux, xMaxFlux))
 			writer.IndentLine(fmt.Sprintf("y: %v, min: %v, max: %v", yRawM, yMinFlux, yMaxFlux))
 			writer.IndentLine(fmt.Sprintf("z: %v, min: %v, max: %v", zRawM, zMinFlux, zMaxFlux))
-			writer.IndentLine(fmt.Sprintf("heading: %v", heading_d))
+			const declination = 8.1  // Boulder is 8 degrees east
+			withDeclination_d := heading_d + declination
+			if withDeclination_d > 360 {
+				withDeclination_d -= 360
+			}
+			writer.IndentLine(fmt.Sprintf("heading: %v (with declination %v) %v", heading_d, declination, withDeclination_d))
 
 			// Output button state
 			var buttonState rpio.State
