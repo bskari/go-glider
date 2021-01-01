@@ -16,15 +16,15 @@ func NewWaypoints() *Waypoints {
 		repeating: []Point{
 			Point{
 				Latitude:  40.055966,
-				Longitude: -195.290124,
+				Longitude: -105.290124,
 			},
 			Point{
 				Latitude:  40.055994,
-				Longitude: -195.288681,
+				Longitude: -105.288681,
 			},
 			Point{
 				Latitude:  40.054785,
-				Longitude: -195.289467,
+				Longitude: -105.289467,
 			},
 		},
 		index:            0,
