@@ -3,7 +3,6 @@ package glider
 import (
 	"github.com/adrianmo/go-nmea"
 	"github.com/argandas/serial"
-	"github.com/bskari/go-lsm303"
 	"log"
 	"math"
 	"periph.io/x/periph/conn/i2c/i2creg"
@@ -105,8 +104,8 @@ type Telemetry struct {
 
 func NewTelemetry() (*Telemetry, error) {
 	var gps serialInterface
-	var accelerometer *lsm303.Accelerometer
-	var magnetometer *lsm303.Magnetometer
+	var accelerometer *Adxl345
+	var magnetometer *Hmc5883L
 	if IsPi() {
 		// Make sure periph is initialized.
 		if _, err := host.Init(); err != nil {
@@ -128,12 +127,11 @@ func NewTelemetry() (*Telemetry, error) {
 			return nil, err
 		}
 
-		// Prepare LSM303
-		accelerometer, err = lsm303.NewAccelerometer(bus, &lsm303.DefaultAccelerometerOpts)
+		accelerometer, err = NewAdxl345(bus)
 		if err != nil {
 			return nil, err
 		}
-		magnetometer, err = lsm303.NewMagnetometer(bus, &lsm303.DefaultMagnetometerOpts)
+		magnetometer, err = NewHmc5883L(bus)
 		if err != nil {
 			return nil, err
 		}
@@ -198,41 +196,45 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 	if zRawA == 0 {
 		zRawA = 1
 	}
-	y2 := int32(yRawA) * int32(yRawA)
+	// The roll calculation assumes that +y is forward, x is right, and
+	// +z is up
+	x2 := int32(yRawA) * int32(yRawA)
 	z2 := int32(zRawA) * int32(zRawA)
 
 	// Tilt compensated compass readings
-	pitch_r := math.Atan2(-float64(xRawA), math.Sqrt(float64(y2+z2)))
-	roll_r := math.Atan2(float64(yRawA), float64(zRawA))
-	xHorizontal := float64(xRawM)*math.Cos(pitch_r) + float64(yRawM)*math.Sin(roll_r)*math.Sin(pitch_r) - float64(zRawM)*math.Cos(roll_r)*math.Sin(pitch_r)
-	yHorizontal := float64(yRawM)*math.Cos(roll_r) + float64(zRawM)*math.Sin(roll_r)
-
-	// The roll calculation assumes that -x is forward, +y is right, and
-	// +z is down
+	pitch_r := math.Atan2(-float64(-yRawA), math.Sqrt(float64(x2+z2)))
+	roll_r := math.Atan2(float64(xRawA), float64(zRawA))
 
 	// TODO: I think these roll and pitch offset calculations are wrong.
 	// We need to figoure out the x, y, and z components that are off
 	// and then add those above to the raw values.
 
-	pitch := ToDegrees(float32(pitch_r)) + configuration.PitchOffset
-	for pitch < -180.0 {
-		pitch += 360.0
+	pitch_d := ToDegrees(float32(pitch_r)) + configuration.PitchOffset
+	for pitch_d < -180.0 {
+		pitch_d += 360.0
 	}
-	for pitch > 180.0 {
-		pitch -= 360.0
+	for pitch_d > 180.0 {
+		pitch_d -= 360.0
 	}
 
-	roll := -ToDegrees(float32(roll_r)) + configuration.RollOffset
-	for roll < -180.0 {
-		roll += 360.0
+	roll_d := -ToDegrees(float32(roll_r)) + configuration.RollOffset
+	for roll_d < -180.0 {
+		roll_d += 360.0
 	}
-	for roll > 180.0 {
-		roll -= 360.0
+	for roll_d > 180.0 {
+		roll_d -= 360.0
 	}
+
+	xM := xRawM - (-518 + 625)
+	yM := yRawM - (-576 + 559)
+	zM := zRawM - (-528 + 565)
+	xHorizontal := float64(xM)*math.Cos(pitch_r) + float64(yM)*math.Sin(roll_r)*math.Sin(pitch_r) - float64(zM)*math.Cos(roll_r)*math.Sin(pitch_r)
+	yHorizontal := float64(yM)*math.Cos(roll_r) + float64(zM)*math.Sin(roll_r)
+	yaw_d := ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))
 	return Axes{
-		Pitch: pitch,
-		Roll:  roll,
-		Yaw:   ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal))),
+		Pitch: pitch_d,
+		Roll:  roll_d,
+		Yaw:   yaw_d,
 	}
 }
 

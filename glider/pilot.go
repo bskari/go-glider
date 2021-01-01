@@ -12,21 +12,21 @@ type PilotState uint8
 // These are defined in reverse order, so that blinking the status makes
 // more sense. Fewer blink patterns indicate we're done initializing.
 const (
-	landed PilotState = iota
-	flying
+	flying PilotState = iota + 1
 	waitingForLaunch
 	waitingForButton
 	initializing
+	landed
 	testMode
 )
 
 func (ps PilotState) String() string {
 	return []string{
-		"landed",
 		"flying",
 		"waitingForLaunch",
 		"waitingForButton",
 		"initializing",
+		"landed",
 		"testMode",
 	}[ps]
 }

@@ -1,19 +1,16 @@
 package main
 
 import (
-	//"bufio"
 	"fmt"
 	"github.com/bskari/go-glider/glider"
 	"github.com/nsf/termbox-go"
 	"github.com/stianeikeland/go-rpio/v4"
-	//"github.com/tarm/serial"
 	"math"
 	"math/rand"
 	"os"
 	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/host"
-	//"sort"
 	"time"
 )
 
