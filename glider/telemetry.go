@@ -198,11 +198,11 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 	}
 	// The roll calculation assumes that +y is forward, x is right, and
 	// +z is up
-	x2 := int32(yRawA) * int32(yRawA)
+	x2 := int32(xRawA) * int32(xRawA)
 	z2 := int32(zRawA) * int32(zRawA)
 
 	// Tilt compensated compass readings
-	pitch_r := math.Atan2(-float64(-yRawA), math.Sqrt(float64(x2+z2)))
+	pitch_r := math.Atan2(float64(yRawA), math.Sqrt(float64(x2+z2)))
 	roll_r := math.Atan2(float64(xRawA), float64(zRawA))
 
 	// TODO: I think these roll and pitch offset calculations are wrong.
@@ -225,12 +225,17 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 		roll_d -= 360.0
 	}
 
-	xM := xRawM - (-518 + 625)
-	yM := yRawM - (-576 + 559)
-	zM := zRawM - (-528 + 565)
-	xHorizontal := float64(xM)*math.Cos(pitch_r) + float64(yM)*math.Sin(roll_r)*math.Sin(pitch_r) - float64(zM)*math.Cos(roll_r)*math.Sin(pitch_r)
+	xM := xRawM - (-490 + 712)
+	yM := yRawM - (-569 + 601)
+	zM := zRawM - (-704 + 435)
+	xHorizontal := float64(xM)*math.Cos(-pitch_r) + float64(yM)*math.Sin(roll_r)*math.Sin(-pitch_r) - float64(zM)*math.Cos(roll_r)*math.Sin(-pitch_r)
 	yHorizontal := float64(yM)*math.Cos(roll_r) + float64(zM)*math.Sin(roll_r)
 	yaw_d := ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))
+	// The magnetometer is mounted 180 off
+	yaw_d += 180
+	if yaw_d > 360 {
+		yaw_d -= 360
+	}
 	return Axes{
 		Pitch: pitch_d,
 		Roll:  roll_d,
@@ -260,12 +265,20 @@ func (telemetry *Telemetry) ParseQueuedMessage() (bool, error) {
 }
 
 func (telemetry *Telemetry) GetPosition() Point {
+	temp := Point{
+		Latitude: 40.00,
+		Longitude: -105.23,
+		Altitude: 1609,
+	}
+	return temp
+	/*
 	_, err := telemetry.ParseQueuedMessage()
 	if err != nil {
 		Logger.Errorf("Unable to parse GPS message: %v", err)
 	}
 	// TODO: Do some forward projection or Kalman filtering
 	return telemetry.recentPoint
+	*/
 }
 
 func (telemetry *Telemetry) GetTimestamp() int64 {

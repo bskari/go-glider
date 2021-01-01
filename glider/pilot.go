@@ -22,6 +22,7 @@ const (
 
 func (ps PilotState) String() string {
 	return []string{
+		"(unused-0-state)",
 		"flying",
 		"waitingForLaunch",
 		"waitingForButton",
@@ -140,8 +141,6 @@ func (pilot *Pilot) runWaitForLaunch() {
 }
 
 func (pilot *Pilot) runFlying() {
-	//position := pilot.telemetry.GetPosition()
-
 	// TODO: When we launch the balloon, check that the altitude is
 	// below configuration.LandingPointAltitude + configuration.LandingPointAltitudeOffset
 	if pilot.telemetry.GetSpeed() > 0.1 {
@@ -151,7 +150,21 @@ func (pilot *Pilot) runFlying() {
 		return
 	}
 
-	// TODO: Fly to waypoints
+	position := pilot.telemetry.GetPosition()
+	if pilot.waypoints.Reached(position) {
+		pilot.waypoints.Next()
+	}
+
+	waypoint := pilot.waypoints.GetWaypoint()
+	axes, err := pilot.telemetry.GetAxes()
+	if err != nil {
+		// I guess just log it?
+		Logger.Errorf("runFlying unable to get axes: %v", err)
+		time.Sleep(configuration.ErrorSleepDuration)
+		return
+	}
+	targetRoll_d := getTargetRoll(axes.Yaw, position, waypoint)
+	pilot.adjustAileronsToRollPitch(targetRoll_d, configuration.TargetPitch, axes)
 }
 
 func (pilot *Pilot) runLanded() {
@@ -170,31 +183,31 @@ func (pilot *Pilot) runLanded() {
 // Just adjust the ailerons to fly roll level. Good for testing or
 // immediately after launch.
 func (pilot *Pilot) runGlideLevel() {
-	// Now adjust the ailerons to fly straight
-	// Just use a P loop for now?
 	axes, err := pilot.telemetry.GetAxes()
 	if err != nil {
 		// I guess just log it?
-		Logger.Errorf("runGlideLevel unable to get axes: %v", err)
+		Logger.Errorf("adjustAileronsToRollPitch unable to get axes: %v", err)
 		time.Sleep(configuration.ErrorSleepDuration)
 		return
 	}
-	position := pilot.telemetry.GetPosition()
-	if pilot.waypoints.Reached(position) {
-		pilot.waypoints.Next()
-	}
-	waypoint := pilot.waypoints.GetWaypoint()
-	targetRoll := getTargetRoll(axes.Yaw, position, waypoint)
-	leftAngle := targetRoll * configuration.ProportionalRollMultiplier
-	rightAngle := -leftAngle
+	// Now adjust the ailerons to fly straight
+	pilot.adjustAileronsToRollPitch(0.0, 0.0, axes)
+}
 
-	//fmt.Printf("pitch %v\n", axes.Pitch)
+// Adjust the ailerons to match some pitch and roll
+func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll, targetPitch Degrees, axes Axes) {
+	// Just use a P loop for now?
+	rollDifference := axes.Roll - targetRoll
+	leftAngle := rollDifference * configuration.ProportionalRollMultiplier
+	rightAngle := leftAngle
+
+	/*
 	adjustment := (configuration.TargetPitch - axes.Pitch) * configuration.ProportionalPitchMultiplier
 	adjustment = clamp(adjustment, -configuration.MaxServoPitchAdjustment, configuration.MaxServoPitchAdjustment)
 
-	//fmt.Printf("pitch adjustment %v\n", adjustment)
 	leftAngle -= adjustment
 	rightAngle += adjustment
+	*/
 
 	leftAngle = clamp(leftAngle, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
 	rightAngle = clamp(rightAngle, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
@@ -203,17 +216,22 @@ func (pilot *Pilot) runGlideLevel() {
 	// servo isn't freaking out due to noisy sensors
 	difference := math.Abs(float64(pilot.previousUpdateRoll - axes.Roll))
 	difference += math.Abs(float64(pilot.previousUpdatePitch - axes.Pitch))
+
+	/*
+	fmt.Printf("roll:%v targetRoll:%v\n", axes.Roll, targetRoll)
+	fmt.Printf("pitch:%v targetPitch:%v\n", axes.Pitch, targetPitch)
+	fmt.Printf("leftAngle:%v rightAngle:%v\n", leftAngle, rightAngle)
+	*/
 	if difference < 4 {
-		//fmt.Println("")
+		//fmt.Printf("Difference %v is too low\n\n", difference)
 		return
 	}
 
-	//fmt.Printf("leftAngle:%v, rightAngle:%v\n", leftAngle, rightAngle)
 	pilot.previousUpdateRoll = axes.Roll
 	pilot.previousUpdatePitch = axes.Pitch
 	leftAngle = roundToUnit(leftAngle, 3)
 	rightAngle = roundToUnit(rightAngle, 3)
-	//fmt.Printf("SetLeft:%v, SetRight:%v\n\n", 90+leftAngle, 90+rightAngle)
+	//fmt.Printf("Setting leftAngle:%v rightAngle:%v\n\n", leftAngle, rightAngle)
 	pilot.control.SetLeft(90 + leftAngle)
 	pilot.control.SetRight(90 + rightAngle)
 }
