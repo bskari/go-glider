@@ -33,16 +33,16 @@ func (ps PilotState) String() string {
 }
 
 type Pilot struct {
-	state               PilotState
-	telemetry           *Telemetry
-	control             *Control
-	statusIndicator     *LedStatusIndicator
-	buttonPin           *rpio.Pin
-	buttonPressTime     time.Time
-	zeroSpeedTime       *time.Time
-	waypoints           *Waypoints
-	previousUpdateRoll  float32
-	previousUpdatePitch float32
+	state                 PilotState
+	telemetry             *Telemetry
+	control               *Control
+	statusIndicator       *LedStatusIndicator
+	buttonPin             *rpio.Pin
+	buttonPressTime       time.Time
+	zeroSpeedTime         *time.Time
+	waypoints             *Waypoints
+	previousUpdateRoll_r  Radians 
+	previousUpdatePitch_r Radians
 }
 
 func NewPilot() (*Pilot, error) {
@@ -195,56 +195,56 @@ func (pilot *Pilot) runGlideLevel() {
 }
 
 // Adjust the ailerons to match some pitch and roll
-func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll, targetPitch Degrees, axes Axes) {
+func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radians, axes Axes) {
 	// Just use a P loop for now?
-	rollDifference := axes.Roll - targetRoll
-	leftAngle := rollDifference * configuration.ProportionalRollMultiplier
-	rightAngle := leftAngle
+	rollDifference := axes.Roll - targetRoll_r
+	leftAngle_r := rollDifference * configuration.ProportionalRollMultiplier
+	rightAngle_r := leftAngle_r
 
 	/*
 	adjustment := (configuration.TargetPitch - axes.Pitch) * configuration.ProportionalPitchMultiplier
 	adjustment = clamp(adjustment, -configuration.MaxServoPitchAdjustment, configuration.MaxServoPitchAdjustment)
 
-	leftAngle -= adjustment
-	rightAngle += adjustment
+	leftAngle_r -= adjustment
+	rightAngle_r += adjustment
 	*/
 
-	leftAngle = clamp(leftAngle, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
-	rightAngle = clamp(rightAngle, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
+	leftAngle_r = clamp(leftAngle_r, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
+	rightAngle_r = clamp(rightAngle_r, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
 
 	// Let's only move the servo when it's changed a little so that the
 	// servo isn't freaking out due to noisy sensors
-	difference := math.Abs(float64(pilot.previousUpdateRoll - axes.Roll))
-	difference += math.Abs(float64(pilot.previousUpdatePitch - axes.Pitch))
+	difference_r := math.Abs(float64(pilot.previousUpdateRoll_r - axes.Roll))
+	difference_r += math.Abs(float64(pilot.previousUpdatePitch_r - axes.Pitch))
 
 	/*
-	fmt.Printf("roll:%v targetRoll:%v\n", axes.Roll, targetRoll)
-	fmt.Printf("pitch:%v targetPitch:%v\n", axes.Pitch, targetPitch)
-	fmt.Printf("leftAngle:%v rightAngle:%v\n", leftAngle, rightAngle)
+	fmt.Printf("roll:%v targetRoll:%v\n", ToDegrees(axes.Roll), ToDegrees(targetRoll))
+	fmt.Printf("pitch:%v targetPitch:%v\n", ToDegrees(axes.Pitch), ToDegrees(targetPitch))
+	fmt.Printf("leftAngle:%v rightAngle:%v\n", ToDegrees(leftAngle), ToDegrees(rightAngle))
 	*/
-	if difference < 4 {
-		//fmt.Printf("Difference %v is too low\n\n", difference)
+	if difference_r < float64(ToRadians(4)) {
+		//fmt.Printf("Difference %v is too low\n\n", ToDegrees(difference_r))
 		return
 	}
 
-	pilot.previousUpdateRoll = axes.Roll
-	pilot.previousUpdatePitch = axes.Pitch
-	leftAngle = roundToUnit(leftAngle, 3)
-	rightAngle = roundToUnit(rightAngle, 3)
-	//fmt.Printf("Setting leftAngle:%v rightAngle:%v\n\n", leftAngle, rightAngle)
-	pilot.control.SetLeft(90 + leftAngle)
-	pilot.control.SetRight(90 + rightAngle)
+	pilot.previousUpdateRoll_r = axes.Roll
+	pilot.previousUpdatePitch_r = axes.Pitch
+	leftAngle_r = roundToUnit(leftAngle_r, 3)
+	rightAngle_r = roundToUnit(rightAngle_r, 3)
+	//fmt.Printf("Setting leftAngle:%v rightAngle:%v\n\n", ToDegrees(leftAngle), ToDegrees(rightAngle))
+	pilot.control.SetLeft(ToRadians(90) + leftAngle_r)
+	pilot.control.SetRight(ToRadians(90) + rightAngle_r)
 }
 
-func getTargetRoll(yaw Degrees, position, waypoint Point) Degrees {
-	goalHeading := Course(position, waypoint)
-	adjustHeading := GetAngleTo(yaw, goalHeading)
-	if GetTurnDirection(yaw, position, waypoint) == Left {
-		adjustHeading = -adjustHeading
+func getTargetRoll(yaw_r Radians, position, waypoint Point) Radians {
+	goalHeading_r := Course(position, waypoint)
+	adjustHeading_r := GetAngleTo(yaw_r, goalHeading_r)
+	if GetTurnDirection(yaw_r, position, waypoint) == Left {
+		adjustHeading_r = -adjustHeading_r
 	}
-	targetRoll := adjustHeading * configuration.ProportionalTargetRollMultiplier
-	targetRoll = clamp(targetRoll, -configuration.MaxTargetRoll, configuration.MaxTargetRoll)
-	return targetRoll
+	targetRoll_r := adjustHeading_r * configuration.ProportionalTargetRollMultiplier
+	targetRoll_r = clamp(targetRoll_r, -configuration.MaxTargetRoll, configuration.MaxTargetRoll)
+	return targetRoll_r
 }
 
 func roundToUnit(x, unit float32) float32 {

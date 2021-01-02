@@ -18,7 +18,7 @@ type Meters = float32
 // Coordinate is separate from Degrees because I want to use float64 for extra
 // precision, but it's overkill for measuring angles
 type Coordinate = float64
-type MetersPerSecond = float64
+type MetersPerSecond = float32
 
 type Point struct {
 	Latitude  Coordinate
@@ -27,9 +27,9 @@ type Point struct {
 }
 
 type Axes struct {
-	Pitch Degrees
-	Roll  Degrees
-	Yaw   Degrees
+	Pitch Radians
+	Roll  Radians
+	Yaw   Radians
 }
 
 type sensor interface {
@@ -202,44 +202,44 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 	z2 := int32(zRawA) * int32(zRawA)
 
 	// Tilt compensated compass readings
-	pitch_r := math.Atan2(float64(yRawA), math.Sqrt(float64(x2+z2)))
-	roll_r := math.Atan2(float64(xRawA), float64(zRawA))
+	pitch_r := Atan2(float32(yRawA), float32(math.Sqrt(float64(x2+z2))))
+	roll_r := Atan2(float32(xRawA), float32(zRawA))
 
 	// TODO: I think these roll and pitch offset calculations are wrong.
-	// We need to figoure out the x, y, and z components that are off
+	// We need to figure out the x, y, and z components that are off
 	// and then add those above to the raw values.
 
-	pitch_d := ToDegrees(float32(pitch_r)) + configuration.PitchOffset
-	for pitch_d < -180.0 {
-		pitch_d += 360.0
+	pitch_r += configuration.PitchOffset
+	for pitch_r < ToRadians(-180.0) {
+		pitch_r += ToRadians(360.0)
 	}
-	for pitch_d > 180.0 {
-		pitch_d -= 360.0
-	}
-
-	roll_d := -ToDegrees(float32(roll_r)) + configuration.RollOffset
-	for roll_d < -180.0 {
-		roll_d += 360.0
-	}
-	for roll_d > 180.0 {
-		roll_d -= 360.0
+	for pitch_r > ToRadians(180.0) {
+		pitch_r -= ToRadians(360.0)
 	}
 
-	xM := xRawM - (-490 + 712)
-	yM := yRawM - (-569 + 601)
-	zM := zRawM - (-704 + 435)
-	xHorizontal := float64(xM)*math.Cos(-pitch_r) + float64(yM)*math.Sin(roll_r)*math.Sin(-pitch_r) - float64(zM)*math.Cos(roll_r)*math.Sin(-pitch_r)
-	yHorizontal := float64(yM)*math.Cos(roll_r) + float64(zM)*math.Sin(roll_r)
-	yaw_d := ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))
+	roll_r += configuration.RollOffset
+	for roll_r < ToRadians(-180.0) {
+		roll_r += ToRadians(360.0)
+	}
+	for roll_r > ToRadians(180.0) {
+		roll_r -= ToRadians(360.0)
+	}
+
+	xM := float32(xRawM - (-490 + 712))
+	yM := float32(yRawM - (-569 + 601))
+	zM := float32(zRawM - (-704 + 435))
+	xHorizontal := xM*Cos(-pitch_r) + yM*Sin(roll_r)*Sin(-pitch_r) - zM*Cos(roll_r)*Sin(-pitch_r)
+	yHorizontal := yM*Cos(roll_r) + zM*Sin(roll_r)
+	yaw_r := Atan2(yHorizontal, xHorizontal)
 	// The magnetometer is mounted 180 off
-	yaw_d += 180
-	if yaw_d > 360 {
-		yaw_d -= 360
+	yaw_r += ToRadians(180.0)
+	if yaw_r > ToRadians(360.0) {
+		yaw_r -= ToRadians(360)
 	}
 	return Axes{
-		Pitch: pitch_d,
-		Roll:  roll_d,
-		Yaw:   yaw_d,
+		Pitch: pitch_r,
+		Roll:  roll_r,
+		Yaw:   yaw_r,
 	}
 }
 

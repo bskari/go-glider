@@ -41,23 +41,23 @@ func NewControl() *Control {
 	return &control
 }
 
-func (control *Control) SetLeft(angle Degrees) error {
-	return control.set(control.left, angle, control.leftZero_us)
+func (control *Control) SetLeft(angle_r Radians) error {
+	return control.set(control.left, angle_r, control.leftZero_us)
 }
 
-func (control *Control) SetRight(angle Degrees) error {
-	return control.set(control.right, angle, control.rightZero_us)
+func (control *Control) SetRight(angle_r Radians) error {
+	return control.set(control.right, angle_r, control.rightZero_us)
 }
 
-func (control *Control) set(pin *rpio.Pin, angle Degrees, offset float32) error {
+func (control *Control) set(pin *rpio.Pin, angle_r Radians, offset float32) error {
 	// Output frequency is computed as pwm clock frequency divided by cycle length.
 	// So, to set Pwm pin to freqency 38kHz with duty cycle 1/4, use this combination:
 	//  pin.DutyCycle(1, 4)
 	//  pin.Freq(38000*4)
-	if angle < 45 || angle > 135 {
+	if angle_r < ToRadians(45) || angle_r > ToRadians(135) {
 		return errors.New("Bad angle")
 	}
-	target_us := uint32(angle*US_PER_DEGREE + offset)
+	target_us := uint32(ToDegrees(angle_r)*US_PER_DEGREE + offset)
 	a := getDutyCycleForUs(target_us)
 	pin.DutyCycle(a, MULTIPLIER)
 	return nil

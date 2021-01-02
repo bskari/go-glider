@@ -38,8 +38,8 @@ func haversineDistance(p1, p2 Point) Meters {
 	deltaPhi := ToCoordinateRadians(p2.Latitude - p1.Latitude)
 	deltaDelta := ToCoordinateRadians(p2.Longitude - p1.Longitude)
 	a := math.Sin(deltaPhi*0.5)*math.Sin(deltaPhi*0.5) + math.Cos(phi1)*math.Cos(phi2)*math.Sin(deltaDelta*0.5)*math.Sin(deltaDelta*0.5)
-	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	return float32(RADIUS_M * c)
+	c := 2 * Atan2(float32(math.Sqrt(a)), float32(math.Sqrt(1-a)))
+	return RADIUS_M * c
 }
 
 func sphericalLawOfCosinesDistance(p1, p2 Point) Meters {
@@ -93,27 +93,27 @@ func cachedEquirectangularDistance(p1, p2 Point) Meters {
 	return Meters(math.Sqrt(float64(x*x + y*y)))
 }
 
-func equirectangularBearing(start, end Point) Degrees {
+func equirectangularBearing(start, end Point) Radians {
 	y := latitudeDistance(start.Latitude, end.Latitude)
 	x := longitudeDistance(start, end)
-	theta := math.Atan2(float64(y), float64(x))
-	// atan returns anticlockweise direction, so negate it
-	bearing := 90 - float32(theta*180/math.Pi) + 360
-	if bearing >= 360 {
-		bearing -= 360
+	theta_r := Atan2(y, x)
+	// atan returns anticlockwise direction, so negate it
+	bearing_r := ToRadians(90.0) - theta_r + ToRadians(360.0)
+	if bearing_r >= ToRadians(360.0) {
+		bearing_r -= ToRadians(360.0)
 	}
-	return bearing
+	return bearing_r
 }
 
-func cachedEquirectangularBearing(start, end Point) Degrees {
+func cachedEquirectangularBearing(start, end Point) Radians {
 	y := latitudeDistance(start.Latitude, end.Latitude)
 	x := cachedLongitudeDistance(start, end)
-	theta := math.Atan2(float64(y), float64(x))
-	bearing := 90 - float32(theta*180/math.Pi) + 360
-	if bearing >= 360 {
-		bearing -= 360
+	theta_r := Atan2(y, x)
+	bearing_r := ToRadians(90.0) - theta_r + ToRadians(360.0)
+	if bearing_r >= ToRadians(360.0) {
+		bearing_r -= ToRadians(360.0)
 	}
-	return bearing
+	return bearing_r
 }
 
 type bearingFormula_t uint8
@@ -124,7 +124,7 @@ const (
 )
 
 // Returns the course from p1 to p2
-func Course(p1, p2 Point) Degrees {
+func Course(p1, p2 Point) Radians {
 	switch configuration.BearingFormula {
 	case BEARING_FORMULA_EQUIRECTANGULAR:
 		return equirectangularBearing(p1, p2)
@@ -149,12 +149,12 @@ func (td TurnDirection) String() string {
 }
 
 // Returns the direction needed to turn to get from start to end
-func GetTurnDirection(bearing Degrees, start, end Point) TurnDirection {
+func GetTurnDirection(bearing_r Radians, start, end Point) TurnDirection {
 	// Based on https://stackoverflow.com/questions/3419341/how-to-calculate-turning-direction
 	x := cachedLongitudeDistance(start, end)
 	y := latitudeDistance(start.Latitude, end.Latitude)
 	// math.Sin expects radians to go anti-clockwise, so flip it
-	antiClockwise := 360 - bearing
+	antiClockwise := 360 - bearing_r
 	// Rotate the vector (0, -10)
 	offsetX := float32(10 * math.Sin(float64(ToRadians(antiClockwise))))
 	offsetY := float32(-10 * math.Cos(float64(ToRadians(antiClockwise))))
@@ -173,15 +173,15 @@ func GetTurnDirection(bearing Degrees, start, end Point) TurnDirection {
 	return UTurn
 }
 
-func GetAngleTo(bearing, goal Degrees) Degrees {
-	var part Degrees
-	if bearing > goal {
-		part = bearing - goal
+func GetAngleTo(bearing_r, goal_r Radians) Radians {
+	var part Radians
+	if bearing_r > goal_r {
+		part = bearing_r - goal_r
 	} else {
-		part = goal - bearing
+		part = goal_r - bearing_r
 	}
-	if part > 180 {
-		return 360 - part
+	if part > ToRadians(180.0) {
+		return ToRadians(360.0) - part
 	}
 	return part
 }

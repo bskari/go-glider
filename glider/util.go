@@ -147,16 +147,29 @@ func (statusIndicator *LedStatusIndicator) Reset() {
 	statusIndicator.until = time.Now().Add(statusIndicator.betweenSetsOfBlinks)
 }
 
+const PI = 3.14159265358979
 func ToDegrees(radians Radians) Degrees {
-	return radians * (180.0 / math.Pi)
+	return radians * (180.0 / PI)
 }
 
 func ToRadians(degrees Degrees) Radians {
-	return degrees * (math.Pi / 180.0)
+	return degrees * (PI / 180.0)
 }
 
 func ToCoordinateRadians(coordinate Coordinate) float64 {
-	return coordinate * (math.Pi / 180.0)
+	return coordinate * (PI / 180.0)
+}
+
+func Atan2(x, y float32) Radians {
+	return Radians(math.Atan2(float64(x), float64(y)))
+}
+
+func Sin(x Radians) float32 {
+	return float32(math.Sin(float64(x)))
+}
+
+func Cos(x Radians) float32 {
+	return float32(math.Cos(float64(x)))
 }
 
 type configuration_t struct {
@@ -166,11 +179,11 @@ type configuration_t struct {
 	WaypointInRangeDistance          Meters
 	DefaultWaypointLatitude          Coordinate
 	DefaultWaypointLongitude         Coordinate
-	PitchOffset                      Degrees
-	RollOffset                       Degrees
+	PitchOffset                      Radians
+	RollOffset                       Radians
 	MagnetometerXOffset_t            float32
 	MagnetometerYOffset_t            float32
-	Declination                      Degrees
+	Declination                      Radians
 	GpsTty                           string
 	GpsBitRate                       int
 	IterationSleepTime               time.Duration
@@ -179,12 +192,12 @@ type configuration_t struct {
 	ProportionalRollMultiplier       float32
 	ProportionalPitchMultiplier      float32
 	ProportionalTargetRollMultiplier float32
-	MaxTargetRoll                    Degrees
+	MaxTargetRoll                    Radians
 	LandingPointAltitude             Meters
 	LandingPointAltitudeOffset       Meters
-	TargetPitch                      Degrees
-	MaxServoPitchAdjustment          Degrees
-	MaxServoAngleOffset              Degrees
+	TargetPitch                      Radians
+	MaxServoPitchAdjustment          Radians
+	MaxServoAngleOffset              Radians
 	LeftServoCenter_us               uint16
 	RightServoCenter_us              uint16
 	ButtonPin                        uint8
@@ -268,8 +281,8 @@ func LoadConfiguration(configurationReader io.Reader) error {
 	configuration.DefaultWaypointLatitude = tomlConfiguration.DefaultWaypointLatitude
 	configuration.DefaultWaypointLongitude = tomlConfiguration.DefaultWaypointLongitude
 
-	configuration.PitchOffset = Degrees(tomlConfiguration.PitchOffset_d)
-	configuration.RollOffset = Degrees(tomlConfiguration.RollOffset_d)
+	configuration.PitchOffset = ToRadians(Degrees(tomlConfiguration.PitchOffset_d))
+	configuration.RollOffset = ToRadians(Degrees(tomlConfiguration.RollOffset_d))
 	configuration.MagnetometerXOffset_t = float32(tomlConfiguration.MagnetometerXMax_t + tomlConfiguration.MagnetometerXMin_t*0.5)
 	configuration.MagnetometerYOffset_t = float32(tomlConfiguration.MagnetometerYMax_t + tomlConfiguration.MagnetometerYMin_t*0.5)
 	configuration.Declination = float32(tomlConfiguration.Declination_d)
@@ -287,12 +300,12 @@ func LoadConfiguration(configurationReader io.Reader) error {
 	configuration.ProportionalRollMultiplier = float32(tomlConfiguration.ProportionalRollMultiplier)
 	configuration.ProportionalPitchMultiplier = float32(tomlConfiguration.ProportionalPitchMultiplier)
 	configuration.ProportionalTargetRollMultiplier = float32(tomlConfiguration.ProportionalTargetRollMultiplier)
-	configuration.MaxTargetRoll = Degrees(tomlConfiguration.MaxTargetRoll_d)
+	configuration.MaxTargetRoll = ToRadians(Degrees(tomlConfiguration.MaxTargetRoll_d))
 	configuration.LandingPointAltitude = Meters(tomlConfiguration.LandingPointAltitude_m)
 	configuration.LandingPointAltitudeOffset = Meters(tomlConfiguration.LandingPointAltitudeOffset_m)
-	configuration.TargetPitch = Degrees(tomlConfiguration.TargetPitch_d)
-	configuration.MaxServoPitchAdjustment = Degrees(tomlConfiguration.MaxServoPitchAdjustment_d)
-	configuration.MaxServoAngleOffset = Degrees(tomlConfiguration.MaxServoAngleOffset_d)
+	configuration.TargetPitch = ToRadians(Degrees(tomlConfiguration.TargetPitch_d))
+	configuration.MaxServoPitchAdjustment = ToRadians(Degrees(tomlConfiguration.MaxServoPitchAdjustment_d))
+	configuration.MaxServoAngleOffset = ToRadians(Degrees(tomlConfiguration.MaxServoAngleOffset_d))
 	configuration.LeftServoCenter_us = uint16(tomlConfiguration.LeftServoCenter_us)
 	configuration.RightServoCenter_us = uint16(tomlConfiguration.RightServoCenter_us)
 

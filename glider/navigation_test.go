@@ -190,7 +190,7 @@ func TestBearingFormulas(t *testing.T) {
 		cached := cachedEquirectangularBearing(start, end)
 
 		// Sanity test
-		if math.Abs(float64(equirectangular)-float64(expected[i])) > 1 {
+		if math.Abs(float64(equirectangular-ToRadians(expected[i]))) > 1 {
 			t.Errorf("equirectangular %v expected %v", equirectangular, expected[i])
 		}
 
@@ -289,37 +289,25 @@ func TestGetTurnDirection(t *testing.T) {
 	}
 }
 
+func checkGetAngleTo(t *testing.T, angle1, angle2, expectedAngle Degrees) {
+	angleTo := float64(GetAngleTo(ToRadians(angle1), ToRadians(angle2)))
+	expected := float64(ToRadians(expectedAngle))
+	if math.Abs(angleTo - expected) > 0.0001 {
+		t.Error("Bad angle")
+	}
+}
+
 func TestGetAngleTo(t *testing.T) {
-	if GetAngleTo(10, 40) != 30 {
-		t.Error("Bad angle")
-	}
-	if GetAngleTo(40, 10) != 30 {
-		t.Error("Bad angle")
-	}
-	if GetAngleTo(150, 190) != 40 {
-		t.Error("Bad angle")
-	}
-	if GetAngleTo(10, 10) != 0 {
-		t.Error("Bad angle")
-	}
-	if GetAngleTo(0, 180) != 180 {
-		t.Error("Bad angle")
-	}
-	if GetAngleTo(180, 0) != 180 {
-		t.Error("Bad angle")
-	}
-	if GetAngleTo(310, 130) != 180 {
-		t.Error("Bad angle")
-	}
-	if GetAngleTo(10, 340) != 30 {
-		t.Error("Bad angle")
-	}
-	if GetAngleTo(340, 10) != 30 {
-		t.Error("Bad angle")
-	}
-	if GetAngleTo(50, 310) != 100 {
-		t.Error("Bad angle")
-	}
+	checkGetAngleTo(t, 10, 40, 30)
+	checkGetAngleTo(t, 40, 10, 30)
+	checkGetAngleTo(t, 150, 190, 40)
+	checkGetAngleTo(t, 10, 10, 0)
+	checkGetAngleTo(t, 0, 180, 180)
+	checkGetAngleTo(t, 180, 0, 180)
+	checkGetAngleTo(t, 310, 130, 180)
+	checkGetAngleTo(t, 10, 340, 30)
+	checkGetAngleTo(t, 340, 10, 30)
+	checkGetAngleTo(t, 50, 310, 100)
 }
 
 func BenchmarkHaversineDistance(b *testing.B) {
