@@ -263,7 +263,7 @@ loop:
 			writer.IndentLine(fmt.Sprintf("x: %v, min: %v, max: %v", xRawM, xMinFlux, xMaxFlux))
 			writer.IndentLine(fmt.Sprintf("y: %v, min: %v, max: %v", yRawM, yMinFlux, yMaxFlux))
 			writer.IndentLine(fmt.Sprintf("z: %v, min: %v, max: %v", zRawM, zMinFlux, zMaxFlux))
-			const declination = 8.1  // Boulder is 8 degrees east
+			const declination = 8.1 // Boulder is 8 degrees east
 			withDeclination_d := heading_d + declination
 			if withDeclination_d > 360 {
 				withDeclination_d -= 360

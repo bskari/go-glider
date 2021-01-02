@@ -148,6 +148,7 @@ func (statusIndicator *LedStatusIndicator) Reset() {
 }
 
 const PI = 3.14159265358979
+
 func ToDegrees(radians Radians) Degrees {
 	return radians * (180.0 / PI)
 }

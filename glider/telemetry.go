@@ -266,18 +266,18 @@ func (telemetry *Telemetry) ParseQueuedMessage() (bool, error) {
 
 func (telemetry *Telemetry) GetPosition() Point {
 	temp := Point{
-		Latitude: 40.00,
+		Latitude:  40.00,
 		Longitude: -105.23,
-		Altitude: 1609,
+		Altitude:  1609,
 	}
 	return temp
 	/*
-	_, err := telemetry.ParseQueuedMessage()
-	if err != nil {
-		Logger.Errorf("Unable to parse GPS message: %v", err)
-	}
-	// TODO: Do some forward projection or Kalman filtering
-	return telemetry.recentPoint
+		_, err := telemetry.ParseQueuedMessage()
+		if err != nil {
+			Logger.Errorf("Unable to parse GPS message: %v", err)
+		}
+		// TODO: Do some forward projection or Kalman filtering
+		return telemetry.recentPoint
 	*/
 }
 

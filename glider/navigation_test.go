@@ -237,53 +237,53 @@ func TestGetTurnDirection(t *testing.T) {
 	}
 
 	// Go towards up from different angles
-	direction = GetTurnDirection(179, Point{0, 0, 0}, Point{1, 0, 0})
+	direction = GetTurnDirection(ToRadians(179), Point{0, 0, 0}, Point{1, 0, 0})
 	if direction != Left {
 		t.Errorf("Bad turn direction %v", direction)
 	}
-	direction = GetTurnDirection(135, Point{0, 0, 0}, Point{1, 0, 0})
+	direction = GetTurnDirection(ToRadians(135), Point{0, 0, 0}, Point{1, 0, 0})
 	if direction != Left {
 		t.Errorf("Bad turn direction %v", direction)
 	}
-	direction = GetTurnDirection(90, Point{0, 0, 0}, Point{1, 0, 0})
+	direction = GetTurnDirection(ToRadians(90), Point{0, 0, 0}, Point{1, 0, 0})
 	if direction != Left {
 		t.Errorf("Bad turn direction %v", direction)
 	}
-	direction = GetTurnDirection(45, Point{0, 0, 0}, Point{1, 0, 0})
+	direction = GetTurnDirection(ToRadians(45), Point{0, 0, 0}, Point{1, 0, 0})
 	if direction != Left {
 		t.Errorf("Bad turn direction %v", direction)
 	}
-	direction = GetTurnDirection(30, Point{0, 0, 0}, Point{1, 0, 0})
+	direction = GetTurnDirection(ToRadians(30), Point{0, 0, 0}, Point{1, 0, 0})
 	if direction != Left {
 		t.Errorf("Bad turn direction %v", direction)
 	}
-	direction = GetTurnDirection(1, Point{0, 0, 0}, Point{1, 0, 0})
+	direction = GetTurnDirection(ToRadians(1), Point{0, 0, 0}, Point{1, 0, 0})
 	if direction != Left {
 		t.Errorf("Bad turn direction %v", direction)
 	}
-	direction = GetTurnDirection(181, Point{0, 0, 0}, Point{1, 0, 0})
+	direction = GetTurnDirection(ToRadians(181), Point{0, 0, 0}, Point{1, 0, 0})
 	if direction != Right {
 		t.Errorf("Bad turn direction %v", direction)
 	}
-	direction = GetTurnDirection(215, Point{0, 0, 0}, Point{1, 0, 0})
+	direction = GetTurnDirection(ToRadians(215), Point{0, 0, 0}, Point{1, 0, 0})
 	if direction != Right {
 		t.Errorf("Bad turn direction %v", direction)
 	}
-	direction = GetTurnDirection(270, Point{0, 0, 0}, Point{1, 0, 0})
+	direction = GetTurnDirection(ToRadians(270), Point{0, 0, 0}, Point{1, 0, 0})
 	if direction != Right {
 		t.Errorf("Bad turn direction %v", direction)
 	}
-	direction = GetTurnDirection(359, Point{0, 0, 0}, Point{1, 0, 0})
+	direction = GetTurnDirection(ToRadians(359), Point{0, 0, 0}, Point{1, 0, 0})
 	if direction != Right {
 		t.Errorf("Bad turn direction %v", direction)
 	}
 
 	// Random tests
-	direction = GetTurnDirection(85, Point{1, 3, 0}, Point{2, -1, 0})
+	direction = GetTurnDirection(ToRadians(85), Point{1, 3, 0}, Point{2, -1, 0})
 	if direction != Left {
 		t.Errorf("Bad turn direction %v", direction)
 	}
-	direction = GetTurnDirection(180, Point{1, 3, 0}, Point{1, 2, 0})
+	direction = GetTurnDirection(ToRadians(180), Point{1, 3, 0}, Point{1, 2, 0})
 	if direction != Right {
 		t.Errorf("Bad turn direction %v", direction)
 	}
@@ -292,7 +292,7 @@ func TestGetTurnDirection(t *testing.T) {
 func checkGetAngleTo(t *testing.T, angle1, angle2, expectedAngle Degrees) {
 	angleTo := float64(GetAngleTo(ToRadians(angle1), ToRadians(angle2)))
 	expected := float64(ToRadians(expectedAngle))
-	if math.Abs(angleTo - expected) > 0.0001 {
+	if math.Abs(angleTo-expected) > 0.0001 {
 		t.Error("Bad angle")
 	}
 }

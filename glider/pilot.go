@@ -41,7 +41,7 @@ type Pilot struct {
 	buttonPressTime       time.Time
 	zeroSpeedTime         *time.Time
 	waypoints             *Waypoints
-	previousUpdateRoll_r  Radians 
+	previousUpdateRoll_r  Radians
 	previousUpdatePitch_r Radians
 }
 
@@ -202,11 +202,11 @@ func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radian
 	rightAngle_r := leftAngle_r
 
 	/*
-	adjustment := (configuration.TargetPitch - axes.Pitch) * configuration.ProportionalPitchMultiplier
-	adjustment = clamp(adjustment, -configuration.MaxServoPitchAdjustment, configuration.MaxServoPitchAdjustment)
+		adjustment := (configuration.TargetPitch - axes.Pitch) * configuration.ProportionalPitchMultiplier
+		adjustment = clamp(adjustment, -configuration.MaxServoPitchAdjustment, configuration.MaxServoPitchAdjustment)
 
-	leftAngle_r -= adjustment
-	rightAngle_r += adjustment
+		leftAngle_r -= adjustment
+		rightAngle_r += adjustment
 	*/
 
 	leftAngle_r = clamp(leftAngle_r, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
@@ -218,9 +218,9 @@ func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radian
 	difference_r += math.Abs(float64(pilot.previousUpdatePitch_r - axes.Pitch))
 
 	/*
-	fmt.Printf("roll:%v targetRoll:%v\n", ToDegrees(axes.Roll), ToDegrees(targetRoll))
-	fmt.Printf("pitch:%v targetPitch:%v\n", ToDegrees(axes.Pitch), ToDegrees(targetPitch))
-	fmt.Printf("leftAngle:%v rightAngle:%v\n", ToDegrees(leftAngle), ToDegrees(rightAngle))
+		fmt.Printf("roll:%v targetRoll:%v\n", ToDegrees(axes.Roll), ToDegrees(targetRoll))
+		fmt.Printf("pitch:%v targetPitch:%v\n", ToDegrees(axes.Pitch), ToDegrees(targetPitch))
+		fmt.Printf("leftAngle:%v rightAngle:%v\n", ToDegrees(leftAngle), ToDegrees(rightAngle))
 	*/
 	if difference_r < float64(ToRadians(4)) {
 		//fmt.Printf("Difference %v is too low\n\n", ToDegrees(difference_r))

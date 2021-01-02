@@ -153,11 +153,10 @@ func GetTurnDirection(bearing_r Radians, start, end Point) TurnDirection {
 	// Based on https://stackoverflow.com/questions/3419341/how-to-calculate-turning-direction
 	x := cachedLongitudeDistance(start, end)
 	y := latitudeDistance(start.Latitude, end.Latitude)
-	// math.Sin expects radians to go anti-clockwise, so flip it
-	antiClockwise := 360 - bearing_r
+	antiClockwise_r := ToRadians(360.0) - bearing_r
 	// Rotate the vector (0, -10)
-	offsetX := float32(10 * math.Sin(float64(ToRadians(antiClockwise))))
-	offsetY := float32(-10 * math.Cos(float64(ToRadians(antiClockwise))))
+	offsetX := float32(10 * math.Sin(float64(antiClockwise_r)))
+	offsetY := float32(-10 * math.Cos(float64(antiClockwise_r)))
 
 	crossProduct := y*offsetX - x*offsetY
 	if crossProduct < 0 {
