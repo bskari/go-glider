@@ -60,3 +60,6 @@ RightServoPin = 13  # BCM 13 = board 33
 # **** Miscellaneous ****
 # How long to sleep when an error occors so that we're not flooding the logs
 ErrorSleepDuration_s = 0.01
+
+# **** Test stuff ****
+FlyDirection = 0.0

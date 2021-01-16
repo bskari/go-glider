@@ -180,6 +180,26 @@ func (pilot *Pilot) runLanded() {
 	}
 }
 
+// Just adjust the ailerons to fly in a direction.
+func (pilot *Pilot) runGlideDirection() {
+	axes, err := pilot.telemetry.GetAxes()
+	if err != nil {
+		// I guess just log it?
+		Logger.Errorf("adjustAileronsToRollPitch unable to get axes: %v", err)
+		time.Sleep(configuration.ErrorSleepDuration)
+		return
+	}
+
+	// Fly in a direction
+	angle_r := GetAngleTo(axes.Yaw, configuration.FlyDirection)
+	const multiplier = 1.0
+	angle_r *= multiplier
+	angle_r = clamp(angle_r, ToRadians(-15), ToRadians(15))
+
+	// Now adjust the ailerons to fly that direction
+	pilot.adjustAileronsToRollPitch(angle_r, 0.0, axes)
+}
+
 // Just adjust the ailerons to fly roll level. Good for testing or
 // immediately after launch.
 func (pilot *Pilot) runGlideLevel() {

@@ -204,6 +204,7 @@ type configuration_t struct {
 	LeftServoPin                     uint8
 	RightServoPin                    uint8
 	ErrorSleepDuration               time.Duration
+	FlyDirection                     Radians
 }
 
 var configuration configuration_t
@@ -245,6 +246,7 @@ type tomlConfiguration_t struct {
 	LeftServoPin                     int64
 	RightServoPin                    int64
 	ErrorSleepDuration_s             float64
+	FlyDirection_d                   float64
 }
 
 func LoadConfiguration(configurationReader io.Reader) error {
@@ -310,6 +312,7 @@ func LoadConfiguration(configurationReader io.Reader) error {
 	configuration.RightServoCenter_us = uint16(tomlConfiguration.RightServoCenter_us)
 
 	configuration.ErrorSleepDuration = time.Duration(tomlConfiguration.ErrorSleepDuration_s * float64(time.Second))
+	configuration.FlyDirection = ToRadians(tomlConfiguration.FlyDirection_d)
 
 	return nil
 }
