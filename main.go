@@ -127,7 +127,7 @@ func runGlide() {
 	// Wait for the GPS to get a lock, so we can set the clock
 	timeSet := false
 	glider.Logger.Info("Waiting for timestamp from GPS")
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 3; i++ {
 		time.Sleep(time.Millisecond * 100)
 		glider.ToggleLed()
 		time.Sleep(time.Millisecond * 900)
@@ -167,6 +167,7 @@ func runGlide() {
 		panic(err)
 	}
 	defer fileLog.Close()
+	fileLog.Chown(1000, 1000)  // User "pi"
 	glider.ConfigureLogger(fileLog)
 	glider.Logger.Info("Starting Pilot")
 	pilot, err := glider.NewPilot()
@@ -183,7 +184,7 @@ func getLogName(timeSet bool) string {
 		logName = fmt.Sprintf("%04d-%02d-%02d-%02d-%02d-%02d-glider.log", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
 	} else {
 		// Just list the files in numerical order
-		entries, err := ioutil.ReadDir(".")
+		entries, err := ioutil.ReadDir("./logs")
 		if err != nil {
 			glider.Logger.Errorf("Unable to list directory contents: %v", err)
 		} else {
