@@ -312,7 +312,7 @@ func LoadConfiguration(configurationReader io.Reader) error {
 	configuration.RightServoCenter_us = uint16(tomlConfiguration.RightServoCenter_us)
 
 	configuration.ErrorSleepDuration = time.Duration(tomlConfiguration.ErrorSleepDuration_s * float64(time.Second))
-	configuration.FlyDirection = ToRadians(tomlConfiguration.FlyDirection_d)
+	configuration.FlyDirection = ToRadians(Degrees(tomlConfiguration.FlyDirection_d))
 
 	return nil
 }

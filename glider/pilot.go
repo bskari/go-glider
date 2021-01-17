@@ -43,6 +43,8 @@ type Pilot struct {
 	waypoints             *Waypoints
 	previousUpdateRoll_r  Radians
 	previousUpdatePitch_r Radians
+	previousAxes          Axes
+	axesIdleTime          time.Time
 }
 
 func NewPilot() (*Pilot, error) {
@@ -105,7 +107,7 @@ func (pilot *Pilot) RunGlideTestForever() {
 		case landed:
 			pilot.runLanded()
 		case testMode:
-			pilot.runGlideLevel()
+			pilot.runGlideDirection()
 		}
 
 		// TODO: Maybe we want to figure out how long one iteration
@@ -185,8 +187,14 @@ func (pilot *Pilot) runGlideDirection() {
 	axes, err := pilot.telemetry.GetAxes()
 	if err != nil {
 		// I guess just log it?
-		Logger.Errorf("adjustAileronsToRollPitch unable to get axes: %v", err)
+		Logger.Errorf("runGlideDirection unable to get axes: %v", err)
 		time.Sleep(configuration.ErrorSleepDuration)
+		return
+	}
+
+	// If we've landed, stop adjusting the ailerons
+	if pilot.hasLanded(axes) {
+		pilot.state = landed
 		return
 	}
 
@@ -197,7 +205,7 @@ func (pilot *Pilot) runGlideDirection() {
 	angle_r = clamp(angle_r, ToRadians(-15), ToRadians(15))
 
 	// Now adjust the ailerons to fly that direction
-	pilot.adjustAileronsToRollPitch(angle_r, 0.0, axes)
+	pilot.adjustAileronsToRollPitch(angle_r, configuration.TargetPitch, axes)
 }
 
 // Just adjust the ailerons to fly roll level. Good for testing or
@@ -206,18 +214,36 @@ func (pilot *Pilot) runGlideLevel() {
 	axes, err := pilot.telemetry.GetAxes()
 	if err != nil {
 		// I guess just log it?
-		Logger.Errorf("adjustAileronsToRollPitch unable to get axes: %v", err)
+		Logger.Errorf("runGlideLevel unable to get axes: %v", err)
 		time.Sleep(configuration.ErrorSleepDuration)
 		return
 	}
+	// If we've landed, stop adjusting the ailerons
+	if pilot.hasLanded(axes) {
+		pilot.state = landed
+		return
+	}
+
 	// Now adjust the ailerons to fly straight
-	pilot.adjustAileronsToRollPitch(0.0, 0.0, axes)
+	pilot.adjustAileronsToRollPitch(0.0, configuration.TargetPitch, axes)
+}
+
+func (pilot *Pilot) hasLanded(axes Axes) bool {
+	var returnValue bool
+	if float32(math.Abs(float64(pilot.previousAxes.Roll - axes.Roll))) > ToRadians(Degrees(1.0)) {
+		pilot.axesIdleTime = time.Now()
+		returnValue = false
+	} else if time.Since(pilot.axesIdleTime) > 10 * time.Second {
+		returnValue = true
+	}
+	pilot.previousAxes = axes
+	return returnValue
 }
 
 // Adjust the ailerons to match some pitch and roll
 func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radians, axes Axes) {
 	// Just use a P loop for now?
-	rollDifference := axes.Roll - targetRoll_r
+	rollDifference := targetRoll_r - axes.Roll
 	leftAngle_r := rollDifference * configuration.ProportionalRollMultiplier
 	rightAngle_r := leftAngle_r
 
