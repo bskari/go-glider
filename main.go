@@ -193,7 +193,7 @@ func getLogName(timeSet bool) string {
 				alreadyExists := false
 				for _, entry := range entries {
 					if strings.HasSuffix(entry.Name(), logName) {
-						alreadyExists = false
+						alreadyExists = true
 						break
 					}
 				}

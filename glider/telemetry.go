@@ -66,7 +66,6 @@ func (filter *sensorFilter) SenseRaw() (int16, int16, int16, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	Logger.Debugf("%v: %v %v %v", filter.name, x, y, z)
 
 	// Move the previous readings down
 	const LEN = len(filter.previousReadings)
