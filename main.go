@@ -126,39 +126,46 @@ func runGlide() {
 
 	// Wait for the GPS to get a lock, so we can set the clock
 	timeSet := false
-	glider.Logger.Info("Waiting for timestamp from GPS")
-	for i := 0; i < 3; i++ {
-		time.Sleep(time.Millisecond * 100)
-		glider.ToggleLed()
-		time.Sleep(time.Millisecond * 900)
-		glider.ToggleLed()
-		// Parse a queued up message
-		_, err := telemetry.ParseQueuedMessage()
-		if err != nil {
-			glider.Logger.Errorf("Unable to parse GPS message: %v", err)
-			break
-		}
-		// 1601261144 = September 27 2020
-		if telemetry.GetTimestamp() > 1601261144 {
-			break
-		}
-	}
-	timestamp := telemetry.GetTimestamp()
-	if timestamp > 1601261144 {
-		now := time.Unix(timestamp, 0)
-		formatted := now.Format("Jan 2 15:04:05 2006 -0700 MST")
-		glider.Logger.Infof("Setting timestamp to %v (%v)", timestamp, formatted)
-		glider.Logger.Debugf("Running `date +%%s -s @%v", fmt.Sprintf("@%v", timestamp))
-		command := exec.Command("date", "+%s", "-s", fmt.Sprintf("@%v", timestamp))
-		err := command.Run()
-		if err != nil {
-			glider.Logger.Errorf("Unable to set time: %v", err)
-		}
+	// Maybe the time has already been set manually
+	setNow := time.Now()
+	if setNow.Year() >= 2021 {
 		timeSet = true
 	} else {
-		now := time.Unix(timestamp, 0)
-		formatted := now.Format("Jan 2 15:04:05 2006 -0700 MST")
-		glider.Logger.Warningf("Bad timestamp received from GPS: %v (%v)", timestamp, formatted)
+		glider.Logger.Info("Waiting for timestamp from GPS")
+		for i := 0; i < 3; i++ {
+			time.Sleep(time.Millisecond * 100)
+			glider.ToggleLed()
+			time.Sleep(time.Millisecond * 900)
+			glider.ToggleLed()
+			// Parse a queued up message
+			_, err := telemetry.ParseQueuedMessage()
+			if err != nil {
+				glider.Logger.Errorf("Unable to parse GPS message: %v", err)
+				break
+			}
+			// 1601261144 = September 27 2020
+			if telemetry.GetTimestamp() > 1601261144 {
+				break
+			}
+		}
+		timestamp := telemetry.GetTimestamp()
+		if timestamp > 1601261144 {
+			now := time.Unix(timestamp, 0)
+			formatted := now.Format("Jan 2 15:04:05 2006 -0700 MST")
+			glider.Logger.Infof("Setting timestamp to %v (%v)", timestamp, formatted)
+			formattedTimestamp := fmt.Sprintf("@%v", timestamp)
+			glider.Logger.Debugf("Running `date +%%s -s @%v", formattedTimestamp)
+			command := exec.Command("date", "+%s", "-s", formattedTimestamp)
+			err := command.Run()
+			if err != nil {
+				glider.Logger.Errorf("Unable to set time: %v", err)
+			}
+			timeSet = true
+		} else {
+			now := time.Unix(timestamp, 0)
+			formatted := now.Format("Jan 2 15:04:05 2006 -0700 MST")
+			glider.Logger.Warningf("Bad timestamp received from GPS: %v (%v)", timestamp, formatted)
+		}
 	}
 
 	logName := getLogName(timeSet)
@@ -178,7 +185,7 @@ func runGlide() {
 }
 
 func getLogName(timeSet bool) string {
-	logName := "1.log"
+	logName := "001.log"
 	if timeSet {
 		now := time.Now()
 		logName = fmt.Sprintf("%04d-%02d-%02d-%02d-%02d-%02d-glider.log", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
@@ -189,7 +196,7 @@ func getLogName(timeSet bool) string {
 			glider.Logger.Errorf("Unable to list directory contents: %v", err)
 		} else {
 			for fileNumber := 1; fileNumber < 100; fileNumber++ {
-				logName = fmt.Sprintf("%d.log", fileNumber)
+				logName = fmt.Sprintf("%03d.log", fileNumber)
 				alreadyExists := false
 				for _, entry := range entries {
 					if strings.HasSuffix(entry.Name(), logName) {

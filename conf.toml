@@ -37,10 +37,10 @@ IterationSleepTime_s = 0.1
 LandNoMoveDuration_s = 5.0
 LaunchGlideDuration_s = 5.0
 ProportionalRollMultiplier = 3.0  # TODO: Tune this
-ProportionalPitchMultiplier = 1.5  # TODO: Tune this
+ProportionalPitchMultiplier = 2.0  # TODO: Tune this
 # Bank X * ProportionalPitchMultiplier if we're X degrees off
-ProportionalTargetRollMultiplier = 0.5  # TODO: Tune this
-MaxTargetRoll_d = 15.0  # TODO: Tune this
+ProportionalTargetRollMultiplier = 1.0  # TODO: Tune this
+MaxTargetRoll_d = 25.0  # TODO: Tune this
 LandingPointAltitude_m = 1556.0
 LandingPointAltitudeOffset_m = 1000.0
 # The preferred pitch for gliding
@@ -62,4 +62,4 @@ RightServoPin = 13  # BCM 13 = board 33
 ErrorSleepDuration_s = 0.01
 
 # **** Test stuff ****
-FlyDirection_d = 0.0
+FlyDirection_d = 355.0

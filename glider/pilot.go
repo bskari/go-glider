@@ -95,6 +95,7 @@ func (pilot *Pilot) RunGlideTestForever() {
 			}
 		}
 
+		Logger.Debug("Running step")
 		switch pilot.state {
 		case initializing:
 			pilot.runInitializing()
@@ -165,8 +166,8 @@ func (pilot *Pilot) runFlying() {
 		time.Sleep(configuration.ErrorSleepDuration)
 		return
 	}
-	targetRoll_d := getTargetRoll(axes.Yaw, position, waypoint)
-	pilot.adjustAileronsToRollPitch(targetRoll_d, configuration.TargetPitch, axes)
+	targetRoll_r := getTargetRoll(axes.Yaw, position, waypoint)
+	pilot.adjustAileronsToRollPitch(targetRoll_r, configuration.TargetPitch, axes)
 }
 
 func (pilot *Pilot) runLanded() {
@@ -200,12 +201,13 @@ func (pilot *Pilot) runGlideDirection() {
 
 	// Fly in a direction
 	angle_r := GetAngleTo(axes.Yaw, configuration.FlyDirection)
-	const multiplier = 1.0
-	angle_r *= multiplier
-	angle_r = clamp(angle_r, ToRadians(-15), ToRadians(15))
+	Logger.Debugf("yaw:%0.1f angle:%0.1f", ToDegrees(axes.Yaw), ToDegrees(angle_r))
+	targetRoll_r := angle_r * configuration.ProportionalTargetRollMultiplier
+	targetRoll_r = clamp(targetRoll_r, -configuration.MaxTargetRoll, configuration.MaxTargetRoll)
 
+	Logger.Debugf("targetRoll:%0.1f", ToDegrees(targetRoll_r))
 	// Now adjust the ailerons to fly that direction
-	pilot.adjustAileronsToRollPitch(angle_r, configuration.TargetPitch, axes)
+	pilot.adjustAileronsToRollPitch(targetRoll_r, configuration.TargetPitch, axes)
 }
 
 // Just adjust the ailerons to fly roll level. Good for testing or
@@ -247,13 +249,11 @@ func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radian
 	leftAngle_r := rollDifference * configuration.ProportionalRollMultiplier
 	rightAngle_r := leftAngle_r
 
-	/*
-		adjustment := (configuration.TargetPitch - axes.Pitch) * configuration.ProportionalPitchMultiplier
-		adjustment = clamp(adjustment, -configuration.MaxServoPitchAdjustment, configuration.MaxServoPitchAdjustment)
+	adjustment := (targetPitch_r - axes.Pitch) * configuration.ProportionalPitchMultiplier
+	adjustment = clamp(adjustment, -configuration.MaxServoPitchAdjustment, configuration.MaxServoPitchAdjustment)
 
-		leftAngle_r -= adjustment
-		rightAngle_r += adjustment
-	*/
+	leftAngle_r -= adjustment
+	rightAngle_r += adjustment
 
 	leftAngle_r = clamp(leftAngle_r, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
 	rightAngle_r = clamp(rightAngle_r, -configuration.MaxServoAngleOffset, configuration.MaxServoAngleOffset)
@@ -263,17 +263,17 @@ func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radian
 	difference_r := float32(math.Abs(float64(pilot.previousUpdateRoll_r - axes.Roll)))
 	difference_r += float32(math.Abs(float64(pilot.previousUpdatePitch_r - axes.Pitch)))
 
-	//fmt.Printf("roll:%v targetRoll:%v\n", ToDegrees(axes.Roll), ToDegrees(targetRoll_r))
-	//fmt.Printf("pitch:%v targetPitch:%v\n", ToDegrees(axes.Pitch), ToDegrees(targetPitch_r))
-	//fmt.Printf("leftAngle:%v rightAngle:%v\n", ToDegrees(leftAngle_r), ToDegrees(rightAngle_r))
+	Logger.Debugf("roll:%0.1f targetRoll:%0.1f", ToDegrees(axes.Roll), ToDegrees(targetRoll_r))
+	Logger.Debugf("pitch:%0.1f targetPitch:%0.1f", ToDegrees(axes.Pitch), ToDegrees(targetPitch_r))
+	Logger.Debugf("leftAngle:%0.1f rightAngle:%0.1f", ToDegrees(leftAngle_r), ToDegrees(rightAngle_r))
 	if difference_r < ToRadians(4) {
-		//fmt.Printf("Difference %v is too low\n\n", ToDegrees(difference_r))
+		Logger.Debugf("difference %0.1f is too low", ToDegrees(difference_r))
 		return
 	}
 
 	pilot.previousUpdateRoll_r = axes.Roll
 	pilot.previousUpdatePitch_r = axes.Pitch
-	//fmt.Printf("Setting leftAngle:%v rightAngle:%v\n\n", ToDegrees(leftAngle_r), ToDegrees(rightAngle_r))
+	Logger.Debugf("setting leftAngle:%0.1f rightAngle:%0.1f", ToDegrees(leftAngle_r), ToDegrees(rightAngle_r))
 	pilot.control.SetLeft(ToRadians(90) + leftAngle_r)
 	pilot.control.SetRight(ToRadians(90) + rightAngle_r)
 }
