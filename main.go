@@ -174,7 +174,7 @@ func runGlide() {
 		panic(err)
 	}
 	defer fileLog.Close()
-	fileLog.Chown(1000, 1000)  // User "pi"
+	fileLog.Chown(1000, 1000) // User "pi"
 	glider.ConfigureLogger(fileLog)
 	glider.Logger.Info("Starting Pilot")
 	pilot, err := glider.NewPilot()

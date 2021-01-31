@@ -1,6 +1,7 @@
 package glider
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"periph.io/x/periph/conn/i2c"
@@ -181,16 +182,25 @@ func (a *Hmc5883L) SetSampleAveraging(newSample Hmc5883LSampleAveraging) error {
 
 func (a *Hmc5883L) SenseRaw() (int16, int16, int16, error) {
 	// I'm not sure if we can do full reads at once, so comment out for now
-	/*
-		var buffer [6]byte
-		err := a.mmr.Conn.Tx([]byte{HMC5883L_DATA_OUTPUT_XMSB_REGISTER}, buffer[:])
-		if err != nil {
-			return 0, 0, 0, err
-		}
-		x := int16(buffer[0] << 8) | int16(buffer[1])
-		y := int16(buffer[2] << 8) | int16(buffer[3])
-		z := int16(buffer[4] << 8) | int16(buffer[5])
-	*/
+	var buffer [6]byte
+	err := a.mmr.Conn.Tx([]byte{HMC5883L_DATA_OUTPUT_XMSB_REGISTER}, buffer[:])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	reader := bytes.NewReader(buffer[:])
+	var x int16
+	var y int16
+	var z int16
+	// The order is x, z, y! See the registers below
+	err = binary.Read(reader, binary.BigEndian, &x)
+	err = binary.Read(reader, binary.BigEndian, &z)
+	err = binary.Read(reader, binary.BigEndian, &y)
+
+	return x, y, z, nil
+}
+
+// This method is disabled because it's probably slower than the above
+func (a *Hmc5883L) _SenseRaw() (int16, int16, int16, error) {
 	xMsb, err := a.mmr.ReadUint8(HMC5883L_DATA_OUTPUT_XMSB_REGISTER)
 	if err != nil {
 		return 0, 0, 0, err
@@ -215,9 +225,9 @@ func (a *Hmc5883L) SenseRaw() (int16, int16, int16, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	x := int16(xMsb)<<8 + int16(xLsb) - (575+-504)/2
-	y := int16(yMsb)<<8 + int16(yLsb) - (439+-744)/2
-	z := int16(zMsb)<<8 + int16(zLsb) - (552+-623)/2
+	x := int16(xMsb)<<8 + int16(xLsb)
+	y := int16(yMsb)<<8 + int16(yLsb)
+	z := int16(zMsb)<<8 + int16(zLsb)
 
 	return x, y, z, nil
 }

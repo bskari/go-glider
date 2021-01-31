@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/bskari/go-glider/glider"
 	"github.com/nsf/termbox-go"
@@ -45,6 +46,36 @@ func (reader dummyReader) Read(buffer []byte) (n int, err error) {
 }
 
 func dumpSensors() {
+	xMinAccelerometer, xMaxAccelerometer, yMinAccelerometer, yMaxAccelerometer, zMinAccelerometer, zMaxAccelerometer, xMinFlux, xMaxFlux, yMinFlux, yMaxFlux, zMinFlux, zMaxFlux := dumpSensorsInner()
+
+	var buffer [2000]byte
+	outputBuffer := bytes.NewBuffer(buffer[:])
+	outputBuffer.WriteString("accelerometer\n")
+	outputBuffer.WriteString(fmt.Sprintf("x max:%v min:%v\n", xMinAccelerometer, xMaxAccelerometer))
+	outputBuffer.WriteString(fmt.Sprintf("y max:%v min:%v\n", yMinAccelerometer, yMaxAccelerometer))
+	outputBuffer.WriteString(fmt.Sprintf("z max:%v min:%v\n", zMinAccelerometer, zMaxAccelerometer))
+	outputBuffer.WriteString("magnetometer\n")
+	outputBuffer.WriteString(fmt.Sprintf("x max:%v min:%v\n", xMinFlux, xMaxFlux))
+	outputBuffer.WriteString(fmt.Sprintf("y max:%v min:%v\n", yMinFlux, yMaxFlux))
+	outputBuffer.WriteString(fmt.Sprintf("z max:%v min:%v\n", zMinFlux, zMaxFlux))
+
+	// On a read-only filesystem, we won't get an error until we try to write
+	// to the file
+	fileWriteSuccess := false
+	file, err := os.Create("readings.txt")
+	if err == nil {
+		defer file.Close()
+		_, err = file.WriteString(outputBuffer.String())
+		if err == nil {
+			fileWriteSuccess = true
+		}
+	}
+	if !fileWriteSuccess {
+		fmt.Print(outputBuffer.String())
+	}
+}
+
+func dumpSensorsInner() (int16, int16, int16, int16, int16, int16, int16, int16, int16, int16, int16, int16) {
 	/*
 		// Set up the GPS
 		var gps *bufio.Reader
@@ -268,7 +299,7 @@ loop:
 			if withDeclination_d > 360 {
 				withDeclination_d -= 360
 			}
-			writer.IndentLine(fmt.Sprintf("heading: %v (with declination %v) %v", heading_d, declination, withDeclination_d))
+			writer.IndentLine(fmt.Sprintf("heading: %0.1f (with declination %0.1f) %0.1f", heading_d, declination, withDeclination_d))
 
 			// Output button state
 			var buttonState rpio.State
@@ -304,25 +335,7 @@ loop:
 			time.Sleep(250 * time.Millisecond)
 		}
 	}
-	file, err := os.Create("readings.txt")
-	check(err)
-	defer file.Close()
-	_, err = file.WriteString("accelerometer\n")
-	check(err)
-	_, err = file.WriteString(fmt.Sprintf("x max:%v min:%v\n", xMinAccelerometerRaw, xMaxAccelerometerRaw))
-	check(err)
-	_, err = file.WriteString(fmt.Sprintf("y max:%v min:%v\n", yMinAccelerometerRaw, yMaxAccelerometerRaw))
-	check(err)
-	_, err = file.WriteString(fmt.Sprintf("z max:%v min:%v\n", zMinAccelerometerRaw, zMaxAccelerometerRaw))
-	check(err)
-	_, err = file.WriteString("magnetometer\n")
-	check(err)
-	_, err = file.WriteString(fmt.Sprintf("x max:%v min:%v\n", xMinFlux, xMaxFlux))
-	check(err)
-	_, err = file.WriteString(fmt.Sprintf("y max:%v min:%v\n", yMinFlux, yMaxFlux))
-	check(err)
-	_, err = file.WriteString(fmt.Sprintf("z max:%v min:%v\n", zMinFlux, zMaxFlux))
-	check(err)
+	return xMinAccelerometerRaw, xMaxAccelerometerRaw, yMinAccelerometerRaw, yMaxAccelerometerRaw, zMinAccelerometerRaw, zMaxAccelerometerRaw, xMinFlux, xMaxFlux, yMinFlux, yMaxFlux, zMinFlux, zMaxFlux
 }
 
 type StringWriter struct {

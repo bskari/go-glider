@@ -232,10 +232,10 @@ func (pilot *Pilot) runGlideLevel() {
 
 func (pilot *Pilot) hasLanded(axes Axes) bool {
 	var returnValue bool
-	if float32(math.Abs(float64(pilot.previousAxes.Roll - axes.Roll))) > ToRadians(Degrees(1.0)) {
+	if float32(math.Abs(float64(pilot.previousAxes.Roll-axes.Roll))) > ToRadians(Degrees(1.0)) {
 		pilot.axesIdleTime = time.Now()
 		returnValue = false
-	} else if time.Since(pilot.axesIdleTime) > 10 * time.Second {
+	} else if time.Since(pilot.axesIdleTime) > 10*time.Second {
 		returnValue = true
 	}
 	pilot.previousAxes = axes
