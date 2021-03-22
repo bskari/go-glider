@@ -33,19 +33,19 @@ const (
 )
 
 type Adxl345 struct {
-	mmr mmr.Dev8
+	Mmr mmr.Dev8
 }
 
 func NewAdxl345(bus i2c.Bus) (*Adxl345, error) {
 	device := &Adxl345{
-		mmr: mmr.Dev8{
+		Mmr: mmr.Dev8{
 			Conn: &i2c.Dev{Bus: bus, Addr: uint16(ADXL345_ADDRESS)},
 			// I don't think we ever access more than 1 byte at once, so
 			// this is irrelevant
 			Order: binary.BigEndian,
 		},
 	}
-	chipId, err := device.mmr.ReadUint8(ADXL345_DEVID)
+	chipId, err := device.Mmr.ReadUint8(ADXL345_DEVID)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func NewAdxl345(bus i2c.Bus) (*Adxl345, error) {
 	}
 
 	// Enable measurements
-	device.mmr.WriteUint8(ADXL345_POWER_CTL, 0b00001000)
+	device.Mmr.WriteUint8(ADXL345_POWER_CTL, 0b00001000)
 	time.Sleep(20 * time.Millisecond)
 
 	err = device.SetRate(ADXL345_RATE_25HZ)
@@ -73,7 +73,7 @@ func NewAdxl345(bus i2c.Bus) (*Adxl345, error) {
 }
 
 func (a *Adxl345) SetRate(newRate Adxl345Rate) error {
-	err := a.mmr.WriteUint8(ADXL345_BW_RATE, uint8(newRate))
+	err := a.Mmr.WriteUint8(ADXL345_BW_RATE, uint8(newRate))
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (a *Adxl345) SetRate(newRate Adxl345Rate) error {
 }
 
 func (a *Adxl345) SetRange(newRange Adxl345Range) error {
-	format, err := a.mmr.ReadUint8(ADXL345_DATA_FORMAT)
+	format, err := a.Mmr.ReadUint8(ADXL345_DATA_FORMAT)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (a *Adxl345) SetRange(newRange Adxl345Range) error {
 	// The lower 2 bits set the range
 	format = format & 0b11111100
 	format = format | uint8(newRange)
-	err = a.mmr.WriteUint8(ADXL345_DATA_FORMAT, format)
+	err = a.Mmr.WriteUint8(ADXL345_DATA_FORMAT, format)
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func (a *Adxl345) SetRange(newRange Adxl345Range) error {
 
 func (a *Adxl345) SenseRaw() (int16, int16, int16, error) {
 	var buffer [6]byte
-	err := a.mmr.Conn.Tx([]byte{ADXL345_DATAX0}, buffer[:])
+	err := a.Mmr.Conn.Tx([]byte{ADXL345_DATAX0}, buffer[:])
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -154,11 +154,11 @@ const (
 	//ADXL345_INT_SOURCE = 0x30  // Source of interrupts.
 	ADXL345_DATA_FORMAT = 0x31 // Data format control.
 	ADXL345_DATAX0      = 0x32 // X-Axis Data 0.
-	//ADXL345_DATAX1 = 0x33  // X-Axis Data 1.
-	//ADXL345_DATAY0 = 0x34  // Y-Axis Data 0.
-	//ADXL345_DATAY1 = 0x35  // Y-Axis Data 1.
-	//ADXL345_DATAZ0 = 0x36  // Z-Axis Data 0.
-	//ADXL345_DATAZ1 = 0x37  // Z-Axis Data 1.
+	ADXL345_DATAX1      = 0x33 // X-Axis Data 1.
+	ADXL345_DATAY0      = 0x34 // Y-Axis Data 0.
+	ADXL345_DATAY1      = 0x35 // Y-Axis Data 1.
+	ADXL345_DATAZ0      = 0x36 // Z-Axis Data 0.
+	ADXL345_DATAZ1      = 0x37 // Z-Axis Data 1.
 	//ADXL345_FIFO_CTL = 0x38  // FIFO control.
 	//ADXL345_FIFO_STATUS = 0x39  // FIFO status
 )

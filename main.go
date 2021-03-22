@@ -81,6 +81,7 @@ func main() {
 	}
 
 	dumpSensorsPtr := flag.Bool("dump", false, "Dump the sensor data")
+	serveCalibrationPtr := flag.Bool("calibrate", false, "Dump calibration over TCP")
 	glidePtr := flag.Bool("glide", false, "Run the glide test")
 	servoPtr := flag.Bool("servo", false, "Run the servo test")
 	flag.Parse()
@@ -109,6 +110,8 @@ func main() {
 
 	if *dumpSensorsPtr {
 		dumpSensors()
+	} else if *serveCalibrationPtr {
+		serveCalibrationData(4381)
 	} else if *glidePtr {
 		runGlide()
 	} else if *servoPtr {

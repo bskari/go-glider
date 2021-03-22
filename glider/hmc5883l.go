@@ -27,14 +27,14 @@ const (
 type Hmc5883LGain int
 
 const (
-	HMC5883L_GAIN_0_88_GA Hmc5883LGain = 0b000 << 5
-	HMC5883L_GAIN_1_3_GA               = 0b001 << 5
-	HMC5883L_GAIN_1_9_GA               = 0b010 << 5
-	HMC5883L_GAIN_2_5_GA               = 0b011 << 5
-	HMC5883L_GAIN_4_0_GA               = 0b100 << 5
-	HMC5883L_GAIN_4_7_GA               = 0b101 << 5
-	HMC5883L_GAIN_5_6_GA               = 0b110 << 5
-	HMC5883L_GAIN_8_1_GA               = 0b111 << 5
+	HMC5883L_GAIN_0_88_GA Hmc5883LGain = 0b000
+	HMC5883L_GAIN_1_3_GA               = 0b001
+	HMC5883L_GAIN_1_9_GA               = 0b010
+	HMC5883L_GAIN_2_5_GA               = 0b011
+	HMC5883L_GAIN_4_0_GA               = 0b100
+	HMC5883L_GAIN_4_7_GA               = 0b101
+	HMC5883L_GAIN_5_6_GA               = 0b110
+	HMC5883L_GAIN_8_1_GA               = 0b111
 	// The physic package uses Tesla, and 1 Tesla = 10,000 Ga
 	HMC5883L_GAIN_0_000088_T Hmc5883LGain = HMC5883L_GAIN_0_88_GA
 	HMC5883L_GAIN_0_00013_T               = HMC5883L_GAIN_1_3_GA
@@ -50,9 +50,9 @@ const (
 type Hmc5883LMeasurementMode int
 
 const (
-	HMC5883L_MODE_CONTINUOUS Hmc5883LMeasurementMode = 0
-	HMC5883L_MODE_SINGLE                             = 1
-	HMC5883L_MODE_IDLE                               = 2
+	HMC5883L_MODE_CONTINUOUS Hmc5883LMeasurementMode = 0b00
+	HMC5883L_MODE_SINGLE                             = 0b01
+	HMC5883L_MODE_IDLE                               = 0b10
 	// There's a second idle mode with value 3, but the docs don't
 	// differentiate between 2 and 3
 )
@@ -61,20 +61,20 @@ const (
 type Hmc5883LSampleAveraging int
 
 const (
-	HMC5883L_SAMPLES_1 Hmc5883LSampleAveraging = 0b00 << 5
-	HMC5883L_SAMPLES_2                         = 0b01 << 5
-	HMC5883L_SAMPLES_4                         = 0b10 << 5
-	HMC5883L_SAMPLES_8                         = 0b11 << 5
+	HMC5883L_SAMPLES_1 Hmc5883LSampleAveraging = 0b00
+	HMC5883L_SAMPLES_2                         = 0b01
+	HMC5883L_SAMPLES_4                         = 0b10
+	HMC5883L_SAMPLES_8                         = 0b11
 )
 
 type Hmc5883L struct {
-	mmr  mmr.Dev8
+	Mmr  mmr.Dev8
 	gain Hmc5883LGain
 }
 
 func NewHmc5883L(bus i2c.Bus) (*Hmc5883L, error) {
 	device := &Hmc5883L{
-		mmr: mmr.Dev8{
+		Mmr: mmr.Dev8{
 			Conn: &i2c.Dev{Bus: bus, Addr: uint16(HMC5883L_READ_ADDRESS)},
 			// I don't think we ever access more than 1 byte at once, so
 			// this is irrelevant
@@ -83,7 +83,7 @@ func NewHmc5883L(bus i2c.Bus) (*Hmc5883L, error) {
 		gain: HMC5883L_GAIN_0_00013_T,
 	}
 
-	chipId, err := device.mmr.ReadUint8(HMC5883L_IDENTIFICATION_REGISTER_A)
+	chipId, err := device.Mmr.ReadUint8(HMC5883L_IDENTIFICATION_REGISTER_A)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func NewHmc5883L(bus i2c.Bus) (*Hmc5883L, error) {
 		return nil, fmt.Errorf("No HMC5883L detected: %v", chipId)
 	}
 
-	chipId, err = device.mmr.ReadUint8(HMC5883L_IDENTIFICATION_REGISTER_B)
+	chipId, err = device.Mmr.ReadUint8(HMC5883L_IDENTIFICATION_REGISTER_B)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func NewHmc5883L(bus i2c.Bus) (*Hmc5883L, error) {
 		return nil, fmt.Errorf("No HMC5883L detected: %v", chipId)
 	}
 
-	chipId, err = device.mmr.ReadUint8(HMC5883L_IDENTIFICATION_REGISTER_C)
+	chipId, err = device.Mmr.ReadUint8(HMC5883L_IDENTIFICATION_REGISTER_C)
 	if err != nil {
 		return nil, err
 	}
@@ -128,13 +128,13 @@ func NewHmc5883L(bus i2c.Bus) (*Hmc5883L, error) {
 }
 
 func (a *Hmc5883L) SetRate(newRate Hmc5883LRate) error {
-	value, err := a.mmr.ReadUint8(HMC5883L_CONFIGURATION_REGISTER_A)
+	value, err := a.Mmr.ReadUint8(HMC5883L_CONFIGURATION_REGISTER_A)
 	if err != nil {
 		return err
 	}
 	value = value & 0b11100011
-	value = value | uint8(newRate)
-	err = a.mmr.WriteUint8(HMC5883L_CONFIGURATION_REGISTER_A, value)
+	value = value | (uint8(newRate) << 2)
+	err = a.Mmr.WriteUint8(HMC5883L_CONFIGURATION_REGISTER_A, value)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (a *Hmc5883L) SetRate(newRate Hmc5883LRate) error {
 func (a *Hmc5883L) SetRange(newGain Hmc5883LGain) error {
 	// The upper 3 bits set the gain. The lower 5 bits must be cleared for
 	// correct operation, so we can just clobber them.
-	err := a.mmr.WriteUint8(HMC5883L_CONFIGURATION_REGISTER_B, uint8(newGain))
+	err := a.Mmr.WriteUint8(HMC5883L_CONFIGURATION_REGISTER_B, uint8(newGain)<<5)
 	if err != nil {
 		return err
 	}
@@ -155,8 +155,13 @@ func (a *Hmc5883L) SetRange(newGain Hmc5883LGain) error {
 }
 
 func (a *Hmc5883L) SetMeasurementMode(newMode Hmc5883LMeasurementMode) error {
-	// The upper 6 bits should be written to 0
-	err := a.mmr.WriteUint8(HMC5883L_MODE_REGISTER, uint8(newMode))
+	value, err := a.Mmr.ReadUint8(HMC5883L_MODE_REGISTER)
+	if err != nil {
+		return err
+	}
+	value = value & 0b1111_1100
+	value = value | uint8(newMode)
+	err = a.Mmr.WriteUint8(HMC5883L_MODE_REGISTER, value)
 	if err != nil {
 		return err
 	}
@@ -166,13 +171,13 @@ func (a *Hmc5883L) SetMeasurementMode(newMode Hmc5883LMeasurementMode) error {
 }
 
 func (a *Hmc5883L) SetSampleAveraging(newSample Hmc5883LSampleAveraging) error {
-	value, err := a.mmr.ReadUint8(HMC5883L_CONFIGURATION_REGISTER_A)
+	value, err := a.Mmr.ReadUint8(HMC5883L_CONFIGURATION_REGISTER_A)
 	if err != nil {
 		return err
 	}
-	value = value & 0b10011111
-	value = value | uint8(newSample)
-	err = a.mmr.WriteUint8(HMC5883L_CONFIGURATION_REGISTER_A, value)
+	value = value & 0b1001_1111
+	value = value | (uint8(newSample) << 5)
+	err = a.Mmr.WriteUint8(HMC5883L_CONFIGURATION_REGISTER_A, value)
 	if err != nil {
 		return err
 	}
@@ -183,7 +188,7 @@ func (a *Hmc5883L) SetSampleAveraging(newSample Hmc5883LSampleAveraging) error {
 func (a *Hmc5883L) SenseRaw() (int16, int16, int16, error) {
 	// I'm not sure if we can do full reads at once, so comment out for now
 	var buffer [6]byte
-	err := a.mmr.Conn.Tx([]byte{HMC5883L_DATA_OUTPUT_XMSB_REGISTER}, buffer[:])
+	err := a.Mmr.Conn.Tx([]byte{HMC5883L_DATA_OUTPUT_XMSB_REGISTER}, buffer[:])
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -200,28 +205,28 @@ func (a *Hmc5883L) SenseRaw() (int16, int16, int16, error) {
 }
 
 // This method is disabled because it's probably slower than the above
-func (a *Hmc5883L) _SenseRaw() (int16, int16, int16, error) {
-	xMsb, err := a.mmr.ReadUint8(HMC5883L_DATA_OUTPUT_XMSB_REGISTER)
+func (a *Hmc5883L) SenseRawSlow() (int16, int16, int16, error) {
+	xMsb, err := a.Mmr.ReadUint8(HMC5883L_DATA_OUTPUT_XMSB_REGISTER)
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	xLsb, err := a.mmr.ReadUint8(HMC5883L_DATA_OUTPUT_XLSB_REGISTER)
+	xLsb, err := a.Mmr.ReadUint8(HMC5883L_DATA_OUTPUT_XLSB_REGISTER)
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	yMsb, err := a.mmr.ReadUint8(HMC5883L_DATA_OUTPUT_YMSB_REGISTER)
+	yMsb, err := a.Mmr.ReadUint8(HMC5883L_DATA_OUTPUT_YMSB_REGISTER)
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	yLsb, err := a.mmr.ReadUint8(HMC5883L_DATA_OUTPUT_YLSB_REGISTER)
+	yLsb, err := a.Mmr.ReadUint8(HMC5883L_DATA_OUTPUT_YLSB_REGISTER)
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	zMsb, err := a.mmr.ReadUint8(HMC5883L_DATA_OUTPUT_ZMSB_REGISTER)
+	zMsb, err := a.Mmr.ReadUint8(HMC5883L_DATA_OUTPUT_ZMSB_REGISTER)
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	zLsb, err := a.mmr.ReadUint8(HMC5883L_DATA_OUTPUT_ZLSB_REGISTER)
+	zLsb, err := a.Mmr.ReadUint8(HMC5883L_DATA_OUTPUT_ZLSB_REGISTER)
 	if err != nil {
 		return 0, 0, 0, err
 	}

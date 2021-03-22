@@ -8,6 +8,7 @@ import (
 	"github.com/stianeikeland/go-rpio/v4"
 	"math"
 	"math/rand"
+	"net"
 	"os"
 	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/conn/physic"
@@ -42,6 +43,50 @@ func (reader dummyReader) Read(buffer []byte) (n int, err error) {
 		return len(message), nil
 	} else {
 		return 0, nil
+	}
+}
+
+// Serves data for calibration on the given port
+func serveCalibrationData(port uint16) {
+	portString := fmt.Sprintf(":%d", port)
+	listener, err := net.Listen("tcp", portString)
+	check(err)
+	fmt.Printf("Listening on port %d\n", port)
+	for {
+		conn, err := listener.Accept()
+		check(err)
+		fmt.Println("Got new connection")
+		go handleConnection(conn)
+	}
+}
+
+func handleConnection(conn net.Conn) {
+	defer conn.Close()
+	_, err := host.Init()
+	check(err)
+	bus, err := i2creg.Open("")
+	check(err)
+	defer bus.Close()
+	accelerometer, err := glider.NewAdxl345(bus)
+	check(err)
+	magnetometer, err := glider.NewHmc5883L(bus)
+	check(err)
+
+	for {
+		xRawA, yRawA, zRawA, err := accelerometer.SenseRaw()
+		check(err)
+		xRawM, yRawM, zRawM, err := magnetometer.SenseRaw()
+		check(err)
+
+		// TODO: Spit out gyroscope data too
+		line := fmt.Sprintf("Raw:%d,%d,%d,%d,%d,%d,%d,%d,%d\n", xRawA, yRawA, zRawA, 0, 0, 0, xRawM, yRawM, zRawM)
+		_, err = conn.Write([]byte(line))
+		fmt.Print(".")
+		if err != nil {
+			fmt.Println("Closing connection")
+			return
+		}
+		time.Sleep(time.Millisecond * 100)
 	}
 }
 
@@ -111,7 +156,6 @@ func dumpSensorsInner() (int16, int16, int16, int16, int16, int16, int16, int16,
 
 		accelerometer, err = glider.NewAdxl345(bus)
 		check(err)
-
 		magnetometer, err = glider.NewHmc5883L(bus)
 		check(err)
 	} else {
@@ -278,9 +322,13 @@ loop:
 			yMaxFlux = max(yRawM, yMaxFlux)
 			zMaxFlux = max(zRawM, zMaxFlux)
 
-			xM := xRawM - (-490 + 712)
-			yM := yRawM - (-569 + 601)
-			zM := zRawM - (-704 + 435)
+			// (These ignore that I mounted it 180 degrees off)
+			// Offsets from MotionCal: 80.5, -134.0, -194.0
+			// Offsets from keeping 2 accelerometer axes at 0 and measuring raw:
+			// (-189 + 334) / 2 = 72, (-399 + 104) / 2 = -148, (-324 + 114) / 2 = -105
+			xM := xRawM - 72
+			yM := yRawM - -148
+			zM := zRawM - -105
 			xHorizontal := float64(xM)*math.Cos(-pitch_r) + float64(yM)*math.Sin(roll_r)*math.Sin(-pitch_r) - float64(zM)*math.Cos(roll_r)*math.Sin(-pitch_r)
 			yHorizontal := float64(yM)*math.Cos(roll_r) + float64(zM)*math.Sin(roll_r)
 			heading_d := glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))
@@ -291,9 +339,11 @@ loop:
 			}
 
 			writer.WriteLine("=== Magnetometer ===")
-			writer.IndentLine(fmt.Sprintf("x: %v, min: %v, max: %v", xRawM, xMinFlux, xMaxFlux))
-			writer.IndentLine(fmt.Sprintf("y: %v, min: %v, max: %v", yRawM, yMinFlux, yMaxFlux))
-			writer.IndentLine(fmt.Sprintf("z: %v, min: %v, max: %v", zRawM, zMinFlux, zMaxFlux))
+			writer.IndentLine(fmt.Sprintf("x: %v, raw: %v, min: %v, max: %v", xM, xRawM, xMinFlux, xMaxFlux))
+			writer.IndentLine(fmt.Sprintf("y: %v, raw: %v, min: %v, max: %v", yM, yRawM, yMinFlux, yMaxFlux))
+			writer.IndentLine(fmt.Sprintf("z: %v, raw: %v, min: %v, max: %v", zM, zRawM, zMinFlux, zMaxFlux))
+			writer.IndentLine(fmt.Sprintf("x horizontal: %0.2f", xHorizontal))
+			writer.IndentLine(fmt.Sprintf("y horizontal: %0.2f", yHorizontal))
 			const declination = 8.1 // Boulder is 8 degrees east
 			withDeclination_d := heading_d + declination
 			if withDeclination_d > 360 {
