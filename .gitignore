@@ -18,6 +18,9 @@ go-glider
 logs
 readings.txt
 
-analysis/*.log
 analysis/*.csv
+analysis/*.html
 analysis/*.kml
+analysis/*.log
+analysis/*.log
+analysis/cookie.txt
