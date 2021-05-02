@@ -9,6 +9,7 @@ pdbpp = "*"
 [packages]
 aprslib = "*"
 requests = "*"
+dataclasses = "*"
 
 [requires]
 python_version = "3.9"
