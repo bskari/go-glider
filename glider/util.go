@@ -35,6 +35,13 @@ func skipIfNotPi(t *testing.T) {
 	}
 }
 
+func approximatelyEqual(a, b float64) bool {
+	if math.Abs(a-b) < 0.001 {
+		return true
+	}
+	return false
+}
+
 var previousLed bool
 var ledEnabled = false
 
@@ -160,18 +167,6 @@ func ToCoordinateRadians(coordinate Coordinate) float64 {
 	return coordinate * (PI / 180.0)
 }
 
-func Atan2(x, y float32) Radians {
-	return Radians(math.Atan2(float64(x), float64(y)))
-}
-
-func Sin(x Radians) float32 {
-	return float32(math.Sin(float64(x)))
-}
-
-func Cos(x Radians) float32 {
-	return float32(math.Cos(float64(x)))
-}
-
 type configuration_t struct {
 	DistanceFormula                  distanceFormula_t
 	BearingFormula                   bearingFormula_t
@@ -181,17 +176,17 @@ type configuration_t struct {
 	DefaultWaypointLongitude         Coordinate
 	PitchOffset                      Radians
 	RollOffset                       Radians
-	MagnetometerXOffset_t            float32
-	MagnetometerYOffset_t            float32
+	MagnetometerXOffset_t            float64
+	MagnetometerYOffset_t            float64
 	Declination                      Radians
 	GpsTty                           string
 	GpsBitRate                       int
 	IterationSleepTime               time.Duration
 	LandNoMoveDuration               time.Duration
 	LaunchGlideDuration              time.Duration
-	ProportionalRollMultiplier       float32
-	ProportionalPitchMultiplier      float32
-	ProportionalTargetRollMultiplier float32
+	ProportionalRollMultiplier       float64
+	ProportionalPitchMultiplier      float64
+	ProportionalTargetRollMultiplier float64
 	MaxTargetRoll                    Radians
 	LandingPointAltitude             Meters
 	LandingPointAltitudeOffset       Meters
@@ -278,16 +273,16 @@ func LoadConfiguration(configurationReader io.Reader) error {
 		return errors.New("Bad BearingFormula in configuration file")
 	}
 
-	configuration.WaypointReachedDistance = float32(tomlConfiguration.WaypointReachedDistance_m)
-	configuration.WaypointInRangeDistance = float32(tomlConfiguration.WaypointInRangeDistance_m)
+	configuration.WaypointReachedDistance = float64(tomlConfiguration.WaypointReachedDistance_m)
+	configuration.WaypointInRangeDistance = float64(tomlConfiguration.WaypointInRangeDistance_m)
 	configuration.DefaultWaypointLatitude = tomlConfiguration.DefaultWaypointLatitude
 	configuration.DefaultWaypointLongitude = tomlConfiguration.DefaultWaypointLongitude
 
 	configuration.PitchOffset = ToRadians(Degrees(tomlConfiguration.PitchOffset_d))
 	configuration.RollOffset = ToRadians(Degrees(tomlConfiguration.RollOffset_d))
-	configuration.MagnetometerXOffset_t = float32(tomlConfiguration.MagnetometerXMax_t + tomlConfiguration.MagnetometerXMin_t*0.5)
-	configuration.MagnetometerYOffset_t = float32(tomlConfiguration.MagnetometerYMax_t + tomlConfiguration.MagnetometerYMin_t*0.5)
-	configuration.Declination = float32(tomlConfiguration.Declination_d)
+	configuration.MagnetometerXOffset_t = float64(tomlConfiguration.MagnetometerXMax_t + tomlConfiguration.MagnetometerXMin_t*0.5)
+	configuration.MagnetometerYOffset_t = float64(tomlConfiguration.MagnetometerYMax_t + tomlConfiguration.MagnetometerYMin_t*0.5)
+	configuration.Declination = float64(tomlConfiguration.Declination_d)
 	configuration.GpsTty = tomlConfiguration.GpsTty
 	configuration.GpsBitRate = int(tomlConfiguration.GpsBitRate)
 
@@ -299,9 +294,9 @@ func LoadConfiguration(configurationReader io.Reader) error {
 
 	configuration.LandNoMoveDuration = time.Duration(tomlConfiguration.LandNoMoveDuration_s * float64(time.Second))
 	configuration.LaunchGlideDuration = time.Duration(tomlConfiguration.LaunchGlideDuration_s * float64(time.Second))
-	configuration.ProportionalRollMultiplier = float32(tomlConfiguration.ProportionalRollMultiplier)
-	configuration.ProportionalPitchMultiplier = float32(tomlConfiguration.ProportionalPitchMultiplier)
-	configuration.ProportionalTargetRollMultiplier = float32(tomlConfiguration.ProportionalTargetRollMultiplier)
+	configuration.ProportionalRollMultiplier = float64(tomlConfiguration.ProportionalRollMultiplier)
+	configuration.ProportionalPitchMultiplier = float64(tomlConfiguration.ProportionalPitchMultiplier)
+	configuration.ProportionalTargetRollMultiplier = float64(tomlConfiguration.ProportionalTargetRollMultiplier)
 	configuration.MaxTargetRoll = ToRadians(Degrees(tomlConfiguration.MaxTargetRoll_d))
 	configuration.LandingPointAltitude = Meters(tomlConfiguration.LandingPointAltitude_m)
 	configuration.LandingPointAltitudeOffset = Meters(tomlConfiguration.LandingPointAltitudeOffset_m)

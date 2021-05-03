@@ -9,17 +9,17 @@ func TestGetTargetRoll(t *testing.T) {
 	maxRoll_r := ToRadians(15.0)
 	configuration.MaxTargetRoll = maxRoll_r
 	targetRoll_r := getTargetRoll(0, Point{0, 0, 0}, Point{1, 0, 0})
-	if targetRoll_r != 0 {
+	if !approximatelyEqual(targetRoll_r, 0) {
 		t.Errorf("Bad targetRoll: %v", targetRoll_r)
 	}
 
 	targetRoll_r = getTargetRoll(ToRadians(90), Point{0, 0, 0}, Point{1, 0, 0})
-	if targetRoll_r != -maxRoll_r {
+	if !approximatelyEqual(targetRoll_r, -maxRoll_r) {
 		t.Errorf("Bad targetRoll: %v", targetRoll_r)
 	}
 
 	targetRoll_r = getTargetRoll(ToRadians(270), Point{0, 0, 0}, Point{1, 0, 0})
-	if targetRoll_r != maxRoll_r {
+	if !approximatelyEqual(targetRoll_r, maxRoll_r) {
 		t.Errorf("Bad targetRoll: %v", targetRoll_r)
 	}
 

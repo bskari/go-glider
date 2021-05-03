@@ -232,7 +232,7 @@ func (pilot *Pilot) runGlideLevel() {
 
 func (pilot *Pilot) hasLanded(axes Axes) bool {
 	var returnValue bool
-	if float32(math.Abs(float64(pilot.previousAxes.Roll-axes.Roll))) > ToRadians(Degrees(1.0)) {
+	if math.Abs(pilot.previousAxes.Roll-axes.Roll) > ToRadians(Degrees(1.0)) {
 		pilot.axesIdleTime = time.Now()
 		returnValue = false
 	} else if time.Since(pilot.axesIdleTime) > 10*time.Second {
@@ -260,8 +260,8 @@ func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radian
 
 	// Let's only move the servo when it's changed a little so that the
 	// servo isn't freaking out due to noisy sensors
-	difference_r := float32(math.Abs(float64(pilot.previousUpdateRoll_r - axes.Roll)))
-	difference_r += float32(math.Abs(float64(pilot.previousUpdatePitch_r - axes.Pitch)))
+	difference_r := math.Abs(pilot.previousUpdateRoll_r - axes.Roll)
+	difference_r += math.Abs(pilot.previousUpdatePitch_r - axes.Pitch)
 
 	Logger.Debugf("roll:%0.1f targetRoll:%0.1f", ToDegrees(axes.Roll), ToDegrees(targetRoll_r))
 	Logger.Debugf("pitch:%0.1f targetPitch:%0.1f", ToDegrees(axes.Pitch), ToDegrees(targetPitch_r))
@@ -281,15 +281,12 @@ func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radian
 func getTargetRoll(yaw_r Radians, position, waypoint Point) Radians {
 	goalHeading_r := Course(position, waypoint)
 	adjustHeading_r := GetAngleTo(yaw_r, goalHeading_r)
-	if GetTurnDirection(yaw_r, position, waypoint) == Left {
-		adjustHeading_r = -adjustHeading_r
-	}
 	targetRoll_r := adjustHeading_r * configuration.ProportionalTargetRollMultiplier
 	targetRoll_r = clamp(targetRoll_r, -configuration.MaxTargetRoll, configuration.MaxTargetRoll)
 	return targetRoll_r
 }
 
-func clamp(value, minimum, maximum float32) float32 {
+func clamp(value, minimum, maximum float64) float64 {
 	if minimum > maximum {
 		temp := minimum
 		minimum = maximum

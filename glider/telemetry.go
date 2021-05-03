@@ -10,14 +10,13 @@ import (
 	"time"
 )
 
-type Degrees = float32
-type Radians = float32
-type Meters = float32
+// Just use float64 because all of the math libraries use it
+type Degrees = float64
+type Radians = float64
+type Meters = float64
 
-// Coordinate is separate from Degrees because I want to use float64 for extra
-// precision, but it's overkill for measuring angles
 type Coordinate = float64
-type MetersPerSecond = float32
+type MetersPerSecond = float64
 
 type Point struct {
 	Latitude  Coordinate
@@ -200,8 +199,8 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 	z2 := int32(zRawA) * int32(zRawA)
 
 	// Tilt compensated compass readings
-	pitch_r := Atan2(float32(yRawA), float32(math.Sqrt(float64(x2+z2))))
-	roll_r := Atan2(float32(xRawA), float32(zRawA))
+	pitch_r := math.Atan2(float64(yRawA), math.Sqrt(float64(x2+z2)))
+	roll_r := math.Atan2(float64(xRawA), float64(zRawA))
 
 	// TODO: I think these roll and pitch offset calculations are wrong.
 	// We need to figure out the x, y, and z components that are off
@@ -223,12 +222,12 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 		roll_r -= ToRadians(360.0)
 	}
 
-	xM := float32(xRawM - (-490 + 712))
-	yM := float32(yRawM - (-569 + 601))
-	zM := float32(zRawM - (-704 + 435))
-	xHorizontal := xM*Cos(-pitch_r) + yM*Sin(roll_r)*Sin(-pitch_r) - zM*Cos(roll_r)*Sin(-pitch_r)
-	yHorizontal := yM*Cos(roll_r) + zM*Sin(roll_r)
-	yaw_r := Atan2(yHorizontal, xHorizontal)
+	xM := float64(xRawM - (-490 + 712))
+	yM := float64(yRawM - (-569 + 601))
+	zM := float64(zRawM - (-704 + 435))
+	xHorizontal := xM*math.Cos(-pitch_r) + yM*math.Sin(roll_r)*math.Sin(-pitch_r) - zM*math.Cos(roll_r)*math.Sin(-pitch_r)
+	yHorizontal := yM*math.Cos(roll_r) + zM*math.Sin(roll_r)
+	yaw_r := math.Atan2(yHorizontal, xHorizontal)
 	// The magnetometer is mounted 180 off
 	yaw_r += ToRadians(180.0)
 	if yaw_r > ToRadians(360.0) {
@@ -331,7 +330,7 @@ func (telemetry *Telemetry) parseSentence(sentence string) {
 		message := parsed.(nmea.GGA)
 		telemetry.recentPoint.Latitude = message.Latitude
 		telemetry.recentPoint.Longitude = message.Longitude
-		telemetry.recentPoint.Altitude = float32(message.Altitude)
+		telemetry.recentPoint.Altitude = message.Altitude
 	} else if strings.HasPrefix(sentence, "$GPVTG") {
 		parsed, err := nmea.Parse(sentence)
 		if err != nil {

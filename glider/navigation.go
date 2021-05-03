@@ -38,7 +38,7 @@ func haversineDistance(p1, p2 Point) Meters {
 	deltaPhi := ToCoordinateRadians(p2.Latitude - p1.Latitude)
 	deltaDelta := ToCoordinateRadians(p2.Longitude - p1.Longitude)
 	a := math.Sin(deltaPhi*0.5)*math.Sin(deltaPhi*0.5) + math.Cos(phi1)*math.Cos(phi2)*math.Sin(deltaDelta*0.5)*math.Sin(deltaDelta*0.5)
-	c := 2 * Atan2(float32(math.Sqrt(a)), float32(math.Sqrt(1-a)))
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 	return RADIUS_M * c
 }
 
@@ -96,7 +96,7 @@ func cachedEquirectangularDistance(p1, p2 Point) Meters {
 func equirectangularBearing(start, end Point) Radians {
 	y := latitudeDistance(start.Latitude, end.Latitude)
 	x := longitudeDistance(start, end)
-	theta_r := Atan2(y, x)
+	theta_r := math.Atan2(y, x)
 	// atan returns anticlockwise direction, so negate it
 	bearing_r := ToRadians(90.0) - theta_r + ToRadians(360.0)
 	if bearing_r >= ToRadians(360.0) {
@@ -108,7 +108,7 @@ func equirectangularBearing(start, end Point) Radians {
 func cachedEquirectangularBearing(start, end Point) Radians {
 	y := latitudeDistance(start.Latitude, end.Latitude)
 	x := cachedLongitudeDistance(start, end)
-	theta_r := Atan2(y, x)
+	theta_r := math.Atan2(y, x)
 	bearing_r := ToRadians(90.0) - theta_r + ToRadians(360.0)
 	if bearing_r >= ToRadians(360.0) {
 		bearing_r -= ToRadians(360.0)
@@ -155,8 +155,8 @@ func GetTurnDirection(bearing_r Radians, start, end Point) TurnDirection {
 	y := latitudeDistance(start.Latitude, end.Latitude)
 	antiClockwise_r := ToRadians(360.0) - bearing_r
 	// Rotate the vector (0, -10)
-	offsetX := float32(10 * math.Sin(float64(antiClockwise_r)))
-	offsetY := float32(-10 * math.Cos(float64(antiClockwise_r)))
+	offsetX := 10 * math.Sin(antiClockwise_r)
+	offsetY := -10 * math.Cos(antiClockwise_r)
 
 	crossProduct := y*offsetX - x*offsetY
 	if crossProduct < 0 {
@@ -173,14 +173,11 @@ func GetTurnDirection(bearing_r Radians, start, end Point) TurnDirection {
 }
 
 func GetAngleTo(bearing_r, goal_r Radians) Radians {
-	var part Radians
-	if bearing_r > goal_r {
-		part = bearing_r - goal_r
-	} else {
-		part = goal_r - bearing_r
+	difference_r := goal_r - bearing_r
+	if difference_r > ToRadians(180.0) {
+		difference_r -= ToRadians(360.0)
+	} else if difference_r < -ToRadians(180.0) {
+		difference_r += ToRadians(360.0)
 	}
-	if part > ToRadians(180.0) {
-		return ToRadians(360.0) - part
-	}
-	return part
+	return difference_r
 }

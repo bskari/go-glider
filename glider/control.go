@@ -18,8 +18,8 @@ const US_PER_DEGREE = 800 / 90
 type Control struct {
 	left         *rpio.Pin
 	right        *rpio.Pin
-	leftZero_us  float32
-	rightZero_us float32
+	leftZero_us  float64
+	rightZero_us float64
 }
 
 func NewControl() *Control {
@@ -33,8 +33,8 @@ func NewControl() *Control {
 	control := Control{
 		left:         &tempLeft,
 		right:        &tempRight,
-		leftZero_us:  float32(configuration.LeftServoCenter_us - US_PER_DEGREE*90),
-		rightZero_us: float32(configuration.RightServoCenter_us - US_PER_DEGREE*90),
+		leftZero_us:  float64(configuration.LeftServoCenter_us - US_PER_DEGREE*90),
+		rightZero_us: float64(configuration.RightServoCenter_us - US_PER_DEGREE*90),
 	}
 	// Param freq should be in range 4688Hz - 19.2MHz to prevent
 	// unexpected behavior
@@ -49,7 +49,7 @@ func (control *Control) SetRight(angle_r Radians) error {
 	return control.set(control.right, angle_r, control.rightZero_us)
 }
 
-func (control *Control) set(pin *rpio.Pin, angle_r Radians, offset float32) error {
+func (control *Control) set(pin *rpio.Pin, angle_r Radians, offset float64) error {
 	// Output frequency is computed as pwm clock frequency divided by cycle length.
 	// So, to set Pwm pin to freqency 38kHz with duty cycle 1/4, use this combination:
 	//  pin.DutyCycle(1, 4)

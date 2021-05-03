@@ -275,8 +275,8 @@ loop:
 			z2 := int32(zRawA) * int32(zRawA)
 			pitch_r := math.Atan(float64(yRawA) / math.Sqrt(float64(x2+z2)))
 			roll_r := -math.Atan2(float64(xRawA), float64(zRawA))
-			pitch_d := glider.ToDegrees(float32(pitch_r))
-			roll_d := glider.ToDegrees(float32(roll_r))
+			pitch_d := glider.ToDegrees(pitch_r)
+			roll_d := glider.ToDegrees(roll_r)
 
 			xMps := float64(x) / float64(physic.Newton)
 			yMps := float64(y) / float64(physic.Newton)
@@ -331,7 +331,7 @@ loop:
 			zM := zRawM - -105
 			xHorizontal := float64(xM)*math.Cos(-pitch_r) + float64(yM)*math.Sin(roll_r)*math.Sin(-pitch_r) - float64(zM)*math.Cos(roll_r)*math.Sin(-pitch_r)
 			yHorizontal := float64(yM)*math.Cos(roll_r) + float64(zM)*math.Sin(roll_r)
-			heading_d := glider.ToDegrees(float32(math.Atan2(yHorizontal, xHorizontal)))
+			heading_d := glider.ToDegrees(math.Atan2(yHorizontal, xHorizontal))
 			// The magnetometer is mounted rotated 180 degrees, so rotate it
 			heading_d = heading_d + 180
 			if heading_d > 360 {
