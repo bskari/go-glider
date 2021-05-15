@@ -110,6 +110,7 @@ func (pilot *Pilot) RunGlideTestForever() {
 		case testMode:
 			pilot.runGlideDirection()
 		}
+		updateDashboard(pilot.telemetry, pilot)
 
 		// TODO: Maybe we want to figure out how long one iteration
 		// took, then sleep an appropriate amount of time, so we can get

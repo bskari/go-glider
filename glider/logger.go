@@ -37,6 +37,7 @@ func (*MultiLogger) Debug(msg string) {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
 	//fmt.Printf(format, msg)
+	//logDashboard(msg)
 }
 func (*MultiLogger) Debugf(msg string, args ...interface{}) {
 	format := getFileFormatString("DEBU")
@@ -45,6 +46,7 @@ func (*MultiLogger) Debugf(msg string, args ...interface{}) {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
 	//fmt.Printf(format, newMsg)
+	//logDashboard(newMsg)
 }
 func (*MultiLogger) Info(msg string) {
 	format := getFileFormatString("INFO")
@@ -52,6 +54,7 @@ func (*MultiLogger) Info(msg string) {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
 	fmt.Printf(format, msg)
+	logDashboard(msg)
 }
 func (*MultiLogger) Infof(msg string, args ...interface{}) {
 	format := getFileFormatString("INFO")
@@ -60,6 +63,7 @@ func (*MultiLogger) Infof(msg string, args ...interface{}) {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
 	fmt.Printf(format, newMsg)
+	logDashboard(newMsg)
 }
 func (logger *MultiLogger) Warning(msg string) {
 	format := getFileFormatString("WARN")
@@ -67,6 +71,7 @@ func (logger *MultiLogger) Warning(msg string) {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
 	logger.warningColor.Printf(format, msg)
+	logDashboard(msg)
 }
 func (logger *MultiLogger) Warningf(msg string, args ...interface{}) {
 	format := getFileFormatString("WARN")
@@ -75,6 +80,7 @@ func (logger *MultiLogger) Warningf(msg string, args ...interface{}) {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
 	logger.warningColor.Printf(format, newMsg)
+	logDashboard(newMsg)
 }
 func (logger *MultiLogger) Error(msg string) {
 	format := getFileFormatString("ERRO")
@@ -82,6 +88,7 @@ func (logger *MultiLogger) Error(msg string) {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
 	logger.errorColor.Printf(format, msg)
+	logDashboard(msg)
 }
 func (logger *MultiLogger) Errorf(msg string, args ...interface{}) {
 	format := getFileFormatString("ERRO")
@@ -90,6 +97,7 @@ func (logger *MultiLogger) Errorf(msg string, args ...interface{}) {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
 	logger.errorColor.Printf(format, newMsg)
+	logDashboard(newMsg)
 }
 func (logger *MultiLogger) Critical(msg string) {
 	format := getFileFormatString("CRIT")
@@ -97,6 +105,7 @@ func (logger *MultiLogger) Critical(msg string) {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
 	logger.errorColor.Printf(format, msg)
+	logDashboard(msg)
 }
 func (logger *MultiLogger) Criticalf(msg string, args ...interface{}) {
 	format := getFileFormatString("CRIT")
@@ -105,4 +114,5 @@ func (logger *MultiLogger) Criticalf(msg string, args ...interface{}) {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
 	logger.errorColor.Printf(format, newMsg)
+	logDashboard(newMsg)
 }

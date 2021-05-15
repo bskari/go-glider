@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/bskari/go-glider/glider"
+	"github.com/nsf/termbox-go"
 	"github.com/stianeikeland/go-rpio/v4"
 	"io/ioutil"
 	"os"
@@ -185,6 +186,12 @@ func runGlide() {
 	if err != nil {
 		glider.Logger.Errorf("Couldn't create Pilot: %v", err)
 	}
+
+	// Set up display
+	err = termbox.Init()
+	check(err)
+	defer termbox.Close()
+
 	pilot.RunGlideTestForever()
 }
 
