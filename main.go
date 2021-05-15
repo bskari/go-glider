@@ -22,12 +22,13 @@ import (
 // 6 = ground, connect to GPS ground
 // 8 = TXD, connect to GPS RXD
 // 10 = RXD, connect to GPS TXD
-// Sparkfun 9DOF stick; ADXL345 accelerometer, HMC5883L magnetometer,
-// PS-ITG-3200 gyroscope connections:
+// Sparkfun 9DOF stick https://www.sparkfun.com/products/retired/10724
+// ADXL345 accelerometer, HMC5883L magnetometer, ITG-3200 gyroscope
+// Connections:
 // 1 = 3.3V, connect to accelerometer VIN
-// 3 = SDA, connect to accelerometer SDA
-// 5 = SCL, connect to accelerometer SCL
 // 9 = ground, connect to accelerometer ground
+// 3 = SDA, connect to accelerometer SDA (yellow)
+// 5 = SCL, connect to accelerometer SCL (orange)
 // Servo connections:
 // 32 (orange) = BCM 12 / PWM0 = left servo yellow wire
 // 33 (yellow) = BCM 13 / PWM1 = right servo yellow wire
