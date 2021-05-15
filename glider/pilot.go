@@ -1,6 +1,7 @@
 package glider
 
 import (
+	"github.com/nsf/termbox-go"
 	"github.com/stianeikeland/go-rpio/v4"
 	"io"
 	"math"
@@ -76,6 +77,14 @@ func NewPilot() (*Pilot, error) {
 func (pilot *Pilot) RunGlideTestForever() {
 	previousState := pilot.state
 	Logger.Infof("Starting RunGlideTestForever in state %s", pilot.state)
+
+	eventQueue := make(chan termbox.Event)
+	go func() {
+		for {
+			eventQueue <- termbox.PollEvent()
+		}
+	}()
+
 	for {
 		if previousState != pilot.state {
 			Logger.Infof("RunGlideTestForever new state %s", pilot.state)
@@ -110,7 +119,16 @@ func (pilot *Pilot) RunGlideTestForever() {
 		case testMode:
 			pilot.runGlideDirection()
 		}
-		updateDashboard(pilot.telemetry, pilot)
+
+		select {
+		case event := <-eventQueue:
+			// Check for any key presses
+			if event.Type == termbox.EventKey {
+				return
+			}
+		default:
+			updateDashboard(pilot.telemetry, pilot)
+		}
 
 		// TODO: Maybe we want to figure out how long one iteration
 		// took, then sleep an appropriate amount of time, so we can get
@@ -145,14 +163,7 @@ func (pilot *Pilot) runWaitForLaunch() {
 }
 
 func (pilot *Pilot) runFlying() {
-	// TODO: When we launch the balloon, check that the altitude is
-	// below configuration.LandingPointAltitude + configuration.LandingPointAltitudeOffset
-	if pilot.telemetry.GetSpeed() > 0.1 {
-		pilot.zeroSpeedTime = nil
-	} else if time.Since(*pilot.zeroSpeedTime) > configuration.LandNoMoveDuration {
-		pilot.state = landed
-		return
-	}
+	// Fly in a direction
 
 	position := pilot.telemetry.GetPosition()
 	if pilot.waypoints.Reached(position) {
@@ -167,7 +178,13 @@ func (pilot *Pilot) runFlying() {
 		time.Sleep(configuration.ErrorSleepDuration)
 		return
 	}
-	targetRoll_r := getTargetRoll(axes.Yaw, position, waypoint)
+
+	if pilot.hasLanded(axes) {
+		pilot.state = landed
+		return
+	}
+
+	targetRoll_r := getTargetRollPosition(axes.Yaw, position, waypoint)
 	pilot.adjustAileronsToRollPitch(targetRoll_r, configuration.TargetPitch, axes)
 }
 
@@ -200,13 +217,9 @@ func (pilot *Pilot) runGlideDirection() {
 		return
 	}
 
-	// Fly in a direction
-	angle_r := GetAngleTo(axes.Yaw, configuration.FlyDirection)
-	Logger.Debugf("yaw:%0.1f angle:%0.1f", ToDegrees(axes.Yaw), ToDegrees(angle_r))
-	targetRoll_r := angle_r * configuration.ProportionalTargetRollMultiplier
-	targetRoll_r = clamp(targetRoll_r, -configuration.MaxTargetRoll, configuration.MaxTargetRoll)
-
+	targetRoll_r := getTargetRollHeading(axes.Yaw, configuration.FlyDirection)
 	Logger.Debugf("targetRoll:%0.1f", ToDegrees(targetRoll_r))
+
 	// Now adjust the ailerons to fly that direction
 	pilot.adjustAileronsToRollPitch(targetRoll_r, configuration.TargetPitch, axes)
 }
@@ -232,13 +245,25 @@ func (pilot *Pilot) runGlideLevel() {
 }
 
 func (pilot *Pilot) hasLanded(axes Axes) bool {
+	// TODO: When we launch the balloon, check that the altitude is
+	// below configuration.LandingPointAltitude + configuration.LandingPointAltitudeOffset
 	var returnValue bool
 	if math.Abs(pilot.previousAxes.Roll-axes.Roll) > ToRadians(Degrees(1.0)) {
 		pilot.axesIdleTime = time.Now()
 		returnValue = false
-	} else if time.Since(pilot.axesIdleTime) > 10*time.Second {
+	} else if time.Since(pilot.axesIdleTime) > configuration.LandNoMoveDuration {
 		returnValue = true
 	}
+
+	if pilot.telemetry.GetSpeed() > 0.1 {
+		pilot.zeroSpeedTime = nil
+		returnValue = false
+	} else if (pilot.zeroSpeedTime == nil) {
+		returnValue = false
+	} else if time.Since(*pilot.zeroSpeedTime) > configuration.LandNoMoveDuration {
+		returnValue = returnValue && true
+	}
+
 	pilot.previousAxes = axes
 	return returnValue
 }
@@ -279,12 +304,17 @@ func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radian
 	pilot.control.SetRight(ToRadians(90) + rightAngle_r)
 }
 
-func getTargetRoll(yaw_r Radians, position, waypoint Point) Radians {
+func getTargetRollPosition(yaw_r Radians, position, waypoint Point) Radians {
 	goalHeading_r := Course(position, waypoint)
+	return getTargetRollHeading(yaw_r, goalHeading_r)
+}
+
+func getTargetRollHeading(yaw_r, goalHeading_r Radians) Radians {
 	adjustHeading_r := GetAngleTo(yaw_r, goalHeading_r)
 	targetRoll_r := adjustHeading_r * configuration.ProportionalTargetRollMultiplier
 	targetRoll_r = clamp(targetRoll_r, -configuration.MaxTargetRoll, configuration.MaxTargetRoll)
-	return targetRoll_r
+	// I defined roll left as positive, but angle left is negative, so we need to negate this
+	return -targetRoll_r
 }
 
 func clamp(value, minimum, maximum float64) float64 {

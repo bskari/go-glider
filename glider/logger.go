@@ -53,7 +53,7 @@ func (*MultiLogger) Info(msg string) {
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
-	fmt.Printf(format, msg)
+	//fmt.Printf(format, msg)
 	logDashboard(msg)
 }
 func (*MultiLogger) Infof(msg string, args ...interface{}) {
@@ -62,7 +62,7 @@ func (*MultiLogger) Infof(msg string, args ...interface{}) {
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
-	fmt.Printf(format, newMsg)
+	//fmt.Printf(format, newMsg)
 	logDashboard(newMsg)
 }
 func (logger *MultiLogger) Warning(msg string) {
@@ -70,7 +70,7 @@ func (logger *MultiLogger) Warning(msg string) {
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
-	logger.warningColor.Printf(format, msg)
+	//logger.warningColor.Printf(format, msg)
 	logDashboard(msg)
 }
 func (logger *MultiLogger) Warningf(msg string, args ...interface{}) {
@@ -79,7 +79,7 @@ func (logger *MultiLogger) Warningf(msg string, args ...interface{}) {
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
-	logger.warningColor.Printf(format, newMsg)
+	//logger.warningColor.Printf(format, newMsg)
 	logDashboard(newMsg)
 }
 func (logger *MultiLogger) Error(msg string) {
@@ -87,7 +87,7 @@ func (logger *MultiLogger) Error(msg string) {
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
-	logger.errorColor.Printf(format, msg)
+	//logger.errorColor.Printf(format, msg)
 	logDashboard(msg)
 }
 func (logger *MultiLogger) Errorf(msg string, args ...interface{}) {
@@ -96,7 +96,7 @@ func (logger *MultiLogger) Errorf(msg string, args ...interface{}) {
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
-	logger.errorColor.Printf(format, newMsg)
+	//logger.errorColor.Printf(format, newMsg)
 	logDashboard(newMsg)
 }
 func (logger *MultiLogger) Critical(msg string) {
@@ -104,7 +104,7 @@ func (logger *MultiLogger) Critical(msg string) {
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, msg)))
 	}
-	logger.errorColor.Printf(format, msg)
+	//logger.errorColor.Printf(format, msg)
 	logDashboard(msg)
 }
 func (logger *MultiLogger) Criticalf(msg string, args ...interface{}) {
@@ -113,6 +113,6 @@ func (logger *MultiLogger) Criticalf(msg string, args ...interface{}) {
 	if fileLog != nil {
 		fileLog.Write([]byte(fmt.Sprintf(format, newMsg)))
 	}
-	logger.errorColor.Printf(format, newMsg)
+	//logger.errorColor.Printf(format, newMsg)
 	logDashboard(newMsg)
 }

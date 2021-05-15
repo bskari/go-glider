@@ -60,32 +60,33 @@ func updateDashboard(telemetry *Telemetry, pilot *Pilot) {
 	} else {
 		position := telemetry.GetPosition()
 		writer.IndentLine(fmt.Sprintf("Lat/Long: %0.5f %0.5f", position.Latitude, position.Longitude))
-		writer.IndentLine(fmt.Sprintf("Altitude %0f m", position.Altitude))
+		writer.IndentLine(fmt.Sprintf("Altitude %0.1f m", position.Altitude))
 	}
 
 	writer.WriteLine("=== Telemetry ===")
 	axes, err := telemetry.GetAxes()
-	if err == nil {
+	if err != nil {
 		writer.IndentLine("(error reading axes)")
 	} else {
 		writer.IndentLine(fmt.Sprintf("Pitch:%0.1f Roll:%0.1f Yaw:%0.1f", ToDegrees(axes.Pitch), ToDegrees(axes.Roll), ToDegrees(axes.Yaw)))
 	}
 
 	writer.WriteLine("=== State ===")
-	writer.IndentLine(string(pilot.state))
+	writer.IndentLine(fmt.Sprintf("%s", pilot.state))
 	if pilot.state == testMode {
-		writer.IndentLine(fmt.Sprintf("Target angle:%0.1f", configuration.FlyDirection))
+		writer.IndentLine(fmt.Sprintf("Target yaw:%0.1f", ToDegrees(configuration.FlyDirection)))
 		angle_r := GetAngleTo(axes.Yaw, configuration.FlyDirection)
 		writer.IndentLine(fmt.Sprintf("Difference:%0.1f", ToDegrees(angle_r)))
-		targetRoll_r := angle_r * configuration.ProportionalTargetRollMultiplier
-		targetRoll_r = clamp(targetRoll_r, -configuration.MaxTargetRoll, configuration.MaxTargetRoll)
+		targetRoll_r := getTargetRollHeading(axes.Yaw, configuration.FlyDirection)
 		writer.IndentLine(fmt.Sprintf("Target roll:%01.f", ToDegrees(targetRoll_r)))
 	}
 
 	writer.WriteLine("=== Messages ===")
-	for e := dashboardMessages.Front(); e != nil; e = e.Next() {
+	for e := dashboardMessages.Back(); e != nil; e = e.Prev() {
 		writer.IndentLine(e.Value.(string))
 	}
+
+	termbox.Flush()
 }
 
 func (writer *StringWriter) WriteLine(str string) {
