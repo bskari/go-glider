@@ -258,7 +258,7 @@ func (pilot *Pilot) hasLanded(axes Axes) bool {
 	if pilot.telemetry.GetSpeed() > 0.1 {
 		pilot.zeroSpeedTime = nil
 		returnValue = false
-	} else if (pilot.zeroSpeedTime == nil) {
+	} else if pilot.zeroSpeedTime == nil {
 		returnValue = false
 	} else if time.Since(*pilot.zeroSpeedTime) > configuration.LandNoMoveDuration {
 		returnValue = returnValue && true
@@ -271,7 +271,7 @@ func (pilot *Pilot) hasLanded(axes Axes) bool {
 // Adjust the ailerons to match some pitch and roll
 func (pilot *Pilot) adjustAileronsToRollPitch(targetRoll_r, targetPitch_r Radians, axes Axes) {
 	// Just use a P loop for now?
-	rollDifference := targetRoll_r - axes.Roll
+	rollDifference := axes.Roll - targetRoll_r
 	leftAngle_r := rollDifference * configuration.ProportionalRollMultiplier
 	rightAngle_r := leftAngle_r
 
@@ -313,8 +313,7 @@ func getTargetRollHeading(yaw_r, goalHeading_r Radians) Radians {
 	adjustHeading_r := GetAngleTo(yaw_r, goalHeading_r)
 	targetRoll_r := adjustHeading_r * configuration.ProportionalTargetRollMultiplier
 	targetRoll_r = clamp(targetRoll_r, -configuration.MaxTargetRoll, configuration.MaxTargetRoll)
-	// I defined roll left as positive, but angle left is negative, so we need to negate this
-	return -targetRoll_r
+	return targetRoll_r
 }
 
 func clamp(value, minimum, maximum float64) float64 {

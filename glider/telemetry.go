@@ -200,7 +200,7 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 
 	// Tilt compensated compass readings
 	pitch_r := math.Atan2(float64(yRawA), math.Sqrt(float64(x2+z2)))
-	roll_r := math.Atan2(float64(xRawA), float64(zRawA))
+	roll_r := -math.Atan2(float64(xRawA), float64(zRawA))
 
 	// TODO: I think these roll and pitch offset calculations are wrong.
 	// We need to figure out the x, y, and z components that are off
@@ -222,9 +222,11 @@ func computeAxes(xRawA, yRawA, zRawA, xRawM, yRawM, zRawM int16) Axes {
 		roll_r -= ToRadians(360.0)
 	}
 
-	xM := float64(xRawM - (-490 + 712))
-	yM := float64(yRawM - (-569 + 601))
-	zM := float64(zRawM - (-704 + 435))
+	// Offsets from keeping 2 accelerometer axes at 0 and measuring raw:
+	// (-189 + 334) / 2 = 72, (-399 + 104) / 2 = -148, (-324 + 114) / 2 = -105
+	xM := float64(xRawM - 72)
+	yM := float64(yRawM - -148)
+	zM := float64(zRawM - -105)
 	xHorizontal := xM*math.Cos(-pitch_r) + yM*math.Sin(roll_r)*math.Sin(-pitch_r) - zM*math.Cos(roll_r)*math.Sin(-pitch_r)
 	yHorizontal := yM*math.Cos(roll_r) + zM*math.Sin(roll_r)
 	yaw_r := math.Atan2(yHorizontal, xHorizontal)
