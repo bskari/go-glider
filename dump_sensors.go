@@ -326,11 +326,11 @@ loop:
 			// Offsets from MotionCal: 80.5, -134.0, -194.0
 			// Offsets from keeping 2 accelerometer axes at 0 and measuring raw:
 			// (-189 + 334) / 2 = 72, (-399 + 104) / 2 = -148, (-324 + 114) / 2 = -105
-			xM := xRawM - 72
-			yM := yRawM - -148
-			zM := zRawM - -105
-			xHorizontal := float64(xM)*math.Cos(-pitch_r) + float64(yM)*math.Sin(roll_r)*math.Sin(-pitch_r) - float64(zM)*math.Cos(roll_r)*math.Sin(-pitch_r)
-			yHorizontal := float64(yM)*math.Cos(roll_r) + float64(zM)*math.Sin(roll_r)
+			xM := float64(xRawM - 72)
+			yM := float64(yRawM - -148)
+			zM := float64(zRawM - -105)
+			xHorizontal := xM*math.Cos(-pitch_r) + yM*math.Sin(roll_r)*math.Sin(-pitch_r) - zM*math.Cos(roll_r)*math.Sin(-pitch_r)
+			yHorizontal := yM*math.Cos(roll_r) + zM*math.Sin(roll_r)
 			heading_d := glider.ToDegrees(math.Atan2(yHorizontal, xHorizontal))
 			// The magnetometer is mounted rotated 180 degrees, so rotate it
 			heading_d = heading_d + 180
