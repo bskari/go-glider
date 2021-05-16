@@ -18,23 +18,26 @@ func testServos() {
 		fmt.Println("Not a Pi")
 		return
 	}
-	fmt.Print("Enter c for control, m for manual: ")
+	fmt.Println("Resetting angles to 90")
+	control := glider.NewControl()
+	control.SetLeft(glider.ToRadians(90))
+	control.SetRight(glider.ToRadians(90))
+	fmt.Print("Enter i to iterate through angles, d for manual duty cycle: ")
 	reader := bufio.NewReader(os.Stdin)
 	line, err := reader.ReadString('\n')
 	if err != nil {
 		fmt.Printf("Bad line: %v\n", err)
 	}
-	if line == "c\n" {
-		controlTest()
-	} else if line == "m\n" {
-		manualTest()
+	if line == "i\n" {
+		iterate(control)
+	} else if line == "d\n" {
+		dutyCycle()
 	} else {
 		fmt.Println("Invalid option")
 	}
 }
 
-func controlTest() {
-	control := glider.NewControl()
+func iterate(control *glider.Control) {
 	angle := glider.Degrees(45.0)
 
 	// Pause a bit after setting the first angle
@@ -67,7 +70,7 @@ func controlTest() {
 }
 
 // Manual testing with oscilloscope
-func manualTest() {
+func dutyCycle() {
 	left := rpio.Pin(LEFT_SERVO_PIN)
 	right := rpio.Pin(RIGHT_SERVO_PIN)
 	left.Pwm()
